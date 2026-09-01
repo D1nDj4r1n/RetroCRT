@@ -204,14 +204,19 @@ function! s:RetrocrtStatusMode()
   let l:m = mode(1)
   if l:m =~# '^i'
     hi StatusLine guifg=#0a0e14 guibg=#ffb020 ctermfg=0 ctermbg=3 gui=NONE cterm=NONE
+    hi ModeMsg guifg=#ffb020 guibg=NONE ctermfg=3 ctermbg=NONE gui=NONE cterm=NONE
   elseif l:m =~# '^[vV\x16sS\x13]'
     hi StatusLine guifg=#0a0e14 guibg=#e040a0 ctermfg=0 ctermbg=5 gui=NONE cterm=NONE
+    hi ModeMsg guifg=#e040a0 guibg=NONE ctermfg=5 ctermbg=NONE gui=NONE cterm=NONE
   elseif l:m =~# '^R'
     hi StatusLine guifg=#0a0e14 guibg=#e05050 ctermfg=0 ctermbg=1 gui=NONE cterm=NONE
+    hi ModeMsg guifg=#e05050 guibg=NONE ctermfg=1 ctermbg=NONE gui=NONE cterm=NONE
   elseif l:m =~# '^c'
     hi StatusLine guifg=#0a0e14 guibg=#ffb020 ctermfg=0 ctermbg=3 gui=NONE cterm=NONE
+    hi ModeMsg guifg=#ffb020 guibg=NONE ctermfg=3 ctermbg=NONE gui=NONE cterm=NONE
   else
     hi StatusLine guifg=#0a0e14 guibg=#00d4c8 ctermfg=0 ctermbg=6 gui=NONE cterm=NONE
+    hi ModeMsg guifg=#00d4c8 guibg=NONE ctermfg=6 ctermbg=NONE gui=NONE cterm=NONE
   endif
 endfunction
 

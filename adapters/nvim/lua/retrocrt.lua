@@ -40,6 +40,7 @@ local function status_mode()
     bg = p.AMBER
   end
   hi("StatusLine", { fg = p.BACKGROUND, bg = bg })
+  hi("ModeMsg", { fg = bg })
 end
 
 function M.apply()
