@@ -14,6 +14,23 @@
 #   0 BACKGROUND   1 RED     2 GREEN   3 AMBER
 #   4 BLUE         5 MAGENTA 6 CYAN    7 FOREGROUND   8 DIM
 
+# --- segment backgrounds: opt-in ------------------------------------------------
+# Only foregrounds are changed below. Segment *backgrounds* are part of the p10k
+# style you chose, not of retrocrt, so they are left alone by default.
+#
+# If you use a style that fills segments with colour (the "rainbow" style), those
+# bars come from ~/.p10k.zsh and will not match anything else on the workstation.
+# To drop them and let the prompt sit directly on the terminal background:
+#
+#   RETROCRT_P10K_FLAT=1
+#   source ~/.config/zsh/p10k.retrocrt.zsh
+#
+# This changes the shape of your prompt, which is why it is not the default.
+if (( ${RETROCRT_P10K_FLAT:-0} )); then
+  unset -m 'POWERLEVEL9K_*_BACKGROUND'
+  typeset -g POWERLEVEL9K_BACKGROUND=
+fi
+
 # --- prompt character: the CRT state language ----------------------------------
 # NORMAL cyan, INSERT amber, VISUAL magenta. Same meaning as the Vim,
 # Neovim and Yazi mode indicators.
@@ -62,5 +79,8 @@ typeset -g POWERLEVEL9K_PYENV_FOREGROUND=4
 typeset -g POWERLEVEL9K_NODEENV_FOREGROUND=4
 typeset -g POWERLEVEL9K_NODE_VERSION_FOREGROUND=4
 
-# Apply without restarting the shell.
-(( ${+functions[p10k]} )) && p10k reload
+# Apply without restarting the shell. Written as a block so that sourcing this
+# file still returns success when Powerlevel10k is not installed.
+if (( ${+functions[p10k]} )); then
+  p10k reload
+fi

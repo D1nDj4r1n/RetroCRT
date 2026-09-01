@@ -115,7 +115,9 @@ endfunction
 function! RetroStatusline() abort
   let [l:name, l:group] = RetroMode()
   let l:s  = '%#' . l:group . '# ' . l:name . ' '
-  let l:s .= '%#RetroStatusFile# %f%{&modified ? " [+]" : ""}%{&readonly ? " [RO]" : ""}'
+  " %< marks where to truncate. Without it the default is the start of the
+  " line, so a long path would eat the mode indicator first.
+  let l:s .= '%#RetroStatusFile# %<%f%{&modified ? " [+]" : ""}%{&readonly ? " [RO]" : ""}'
   let l:s .= '%#RetroStatusInfo#%='
   let l:s .= '%{&filetype ==# "" ? "none" : &filetype}  %{&fileencoding}  %{&fileformat} '
   let l:s .= '%#' . l:group . '# %l:%c  %p%% '

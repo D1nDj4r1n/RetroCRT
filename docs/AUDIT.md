@@ -119,10 +119,16 @@ the task shaped decisions and were honoured:
 - No Yazi theme pack. `yazi/theme.toml` is hand-written and validated against
   Yazi's official JSON schema.
 
-One version conflict was found and resolved during implementation: Yazi moved
-`hovered` and `preview_hovered` out of `[mgr]` into an `[indicator]` section.
-The adapter follows the current schema, and the old names are noted in a
-comment for anyone running an older Yazi.
+Two Yazi conflicts were found and resolved during implementation:
+
+- `hovered` and `preview_hovered` have moved out of `[mgr]` into an
+  `[indicator]` section. The adapter follows the current schema, and the old
+  names are noted in a comment for anyone on an older Yazi.
+- Yazi 26.9.1 **refuses to load a theme containing an inline `"$schema"` key**,
+  because it validates every top-level key as a section name — even though that
+  key appears in Yazi's own shipped preset. This passed JSON-schema validation
+  and was only caught by running the real binary. The key was removed;
+  validation is done from outside with `taplo` instead.
 
 ## User-specific — untouched
 
@@ -136,6 +142,20 @@ comment for anyone running an older Yazi.
 - Fonts and typography generally.
 - Any existing `~/.vimrc` or `~/.config/nvim`. `retrocrt-link` is a dry run by
   default and refuses to overwrite a real file even with `--apply`.
+
+## Requires a decision from you
+
+1. **`vim/colors/retrocrt.vim` is a reconstruction, not your file.** Diff it
+   against the real one before installing. `retrocrt-link` will refuse to
+   overwrite anything, so nothing is lost either way.
+2. **Powerlevel10k segment backgrounds.** The overlay recolours foregrounds
+   only. If your p10k style fills segments with colour, those bars still come
+   from your `~/.p10k.zsh`. Setting `RETROCRT_P10K_FLAT=1` before sourcing the
+   overlay drops them, but that changes the prompt's shape, so it is your call.
+3. **`vim/vimrc`, `nvim/init.lua` and `zsh/zshrc.example` are baselines.** They
+   implement what the design brief specified, but they cannot preserve settings
+   that could not be read. Treat them as a starting point to merge, not as a
+   replacement.
 
 ## Recommendation, and what was done
 

@@ -47,7 +47,9 @@ function M.render()
   local ft = vim.bo.filetype
   return table.concat({
     '%#', mode[2], '# ', mode[1], ' ',
-    '%#RetroStatusFile# %f%m%r',
+    -- %< marks where to truncate. Without it the default is the start of the
+    -- line, so a long path would eat the mode indicator first.
+    '%#RetroStatusFile# %<%f%m%r',
     '%#RetroStatusInfo#%= ',
     diagnostics(),
     '%#RetroStatusInfo#',

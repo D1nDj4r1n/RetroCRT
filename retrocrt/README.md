@@ -256,6 +256,15 @@ Each is a decision, not an oversight.
 - **Powerlevel10k uses ANSI indices, not hex.** p10k takes colour numbers, so
   it inherits the palette through the terminal instead of restating it. This is
   rule 4 working as intended, not a gap.
+- **Powerlevel10k segment backgrounds are not changed.** The overlay sets
+  foregrounds only. If your p10k style fills segments with colour, those bars
+  come from your `~/.p10k.zsh` and will not match the rest of the workstation.
+  Removing them changes the shape of the prompt, not just its colour, so it is
+  offered as an opt-in (`RETROCRT_P10K_FLAT=1`) rather than done for you.
+- **Yazi's `theme.toml` carries no inline `"$schema"` key.** Yazi validates
+  every top-level key as a section name and refuses to load a theme that has
+  one, despite the key appearing in its own shipped preset. Validate the file
+  from outside with `taplo check --schema ...` instead.
 - **Ghostty is the only adapter allowed to set non-colour options** — and it
   does not use that permission. A theme file is a full config file, so the
   adapter is restricted to colour by convention.

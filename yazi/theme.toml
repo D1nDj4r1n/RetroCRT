@@ -10,9 +10,11 @@
 #   directory cyan · executable green · symlink magenta · broken red
 #
 # Section names follow Yazi >= 25.5.28. On older versions [mgr] was [manager].
-# Validate with:  taplo check --schema https://yazi-rs.github.io/schemas/theme.json theme.toml
-
-"$schema" = "https://yazi-rs.github.io/schemas/theme.json"
+#
+# There is deliberately no inline "$schema" key: Yazi validates every top-level
+# key as a section name and rejects it. Validate from the outside instead:
+#
+#   taplo check --schema https://yazi-rs.github.io/schemas/theme.json theme.toml
 
 # No flavor pack. The styles below are the theme.
 [flavor]
