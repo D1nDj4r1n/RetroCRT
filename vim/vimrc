@@ -1,0 +1,134 @@
+" ~/.vimrc — lightweight editor
+"
+" Vim is the quick editor: system files, git commits, single-file edits,
+" anything where starting an IDE is the wrong move. Neovim is the IDE.
+" Keep this file small enough to read in one sitting.
+"
+" This is a baseline. If you already have a .vimrc, keep yours and take only
+" the "appearance" and "statusline" sections below.
+
+set nocompatible
+filetype plugin indent on
+syntax enable
+
+" Set before any mapping, because <leader> is expanded when a mapping is defined.
+let mapleader = ' '
+let maplocalleader = ' '
+
+" --- appearance (retrocrt) ----------------------------------------------------
+if has('termguicolors')
+  " Correct truecolor sequences inside tmux/screen.
+  if !has('gui_running') && &term !~# '^\(xterm\|screen\|tmux\)'
+    " leave termguicolors off on terminals that do not advertise it
+  else
+    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+    set termguicolors
+  endif
+endif
+
+set background=dark
+silent! colorscheme retrocrt
+
+" --- editing ------------------------------------------------------------------
+set encoding=utf-8
+set hidden
+set number relativenumber
+set cursorline
+set scrolloff=4
+set sidescrolloff=8
+set signcolumn=yes
+set nowrap
+set expandtab shiftwidth=4 tabstop=4 softtabstop=4
+set smartindent
+set backspace=indent,eol,start
+set incsearch hlsearch
+set ignorecase smartcase
+set splitbelow splitright
+set laststatus=2
+set noshowmode                      " the statusline reports the mode
+set showcmd
+set wildmenu
+set wildmode=longest:full,full
+set list
+set listchars=tab:›\ ,trail:·,nbsp:␣,extends:›,precedes:‹
+set updatetime=300
+set timeoutlen=500
+set ttimeoutlen=10
+set mouse=
+
+" Undo history survives restarts; swap/backup clutter does not.
+set noswapfile
+set nobackup
+set nowritebackup
+if has('persistent_undo')
+  let s:undodir = expand('~/.vim/undo')
+  if !isdirectory(s:undodir)
+    call mkdir(s:undodir, 'p', 0700)
+  endif
+  let &undodir = s:undodir
+  set undofile
+endif
+
+" --- clipboard ----------------------------------------------------------------
+" Prefer the system clipboard when Vim was built with +clipboard. Under Wayland
+" without it, fall back to wl-clipboard through explicit yank/put mappings.
+if has('clipboard')
+  set clipboard=unnamedplus
+elseif executable('wl-copy')
+  xnoremap <leader>y :w !wl-copy<CR><CR>
+  nnoremap <leader>y :.w !wl-copy<CR><CR>
+  nnoremap <leader>p :r !wl-paste --no-newline<CR>
+endif
+
+" --- keys ---------------------------------------------------------------------
+" netrw is the file explorer here; oil.nvim fills the same slot in Neovim.
+let g:netrw_banner = 0
+let g:netrw_liststyle = 3
+let g:netrw_winsize = 25
+let g:netrw_altv = 1
+nnoremap <leader>e :Lexplore<CR>
+
+nnoremap <silent> <leader><space> :nohlsearch<CR>
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" --- statusline (CRT state language) ------------------------------------------
+" NORMAL cyan, INSERT amber, VISUAL magenta, REPLACE red, COMMAND blue.
+" The highlight groups are defined by the retrocrt colorscheme.
+function! RetroMode() abort
+  let l:m = mode()
+  " Double quotes: \<C-v> must become the literal control character, otherwise
+  " it is read as the character range C-v and matches nearly every mode.
+  if     l:m =~# "^[vV\<C-v>]" | return ['VISUAL',  'RetroModeVisual']
+  elseif l:m =~# "^[sS\<C-s>]" | return ['SELECT',  'RetroModeVisual']
+  elseif l:m =~# '^R'          | return ['REPLACE', 'RetroModeReplace']
+  elseif l:m =~# '^i'          | return ['INSERT',  'RetroModeInsert']
+  elseif l:m =~# '^t'          | return ['TERM',    'RetroModeTerminal']
+  elseif l:m =~# '^c'          | return ['COMMAND', 'RetroModeCommand']
+  else                         | return ['NORMAL',  'RetroModeNormal']
+  endif
+endfunction
+
+function! RetroStatusline() abort
+  let [l:name, l:group] = RetroMode()
+  let l:s  = '%#' . l:group . '# ' . l:name . ' '
+  let l:s .= '%#RetroStatusFile# %f%{&modified ? " [+]" : ""}%{&readonly ? " [RO]" : ""}'
+  let l:s .= '%#RetroStatusInfo#%='
+  let l:s .= '%{&filetype ==# "" ? "none" : &filetype}  %{&fileencoding}  %{&fileformat} '
+  let l:s .= '%#' . l:group . '# %l:%c  %p%% '
+  return l:s
+endfunction
+
+set statusline=%!RetroStatusline()
+
+" Repaint the mode segment as the mode changes.
+augroup retrocrt_statusline
+  autocmd!
+  autocmd ModeChanged * redrawstatus
+augroup END
+
+" --- editor of record ---------------------------------------------------------
+" $EDITOR / $VISUAL / $GIT_EDITOR are set by the shell (see zsh/zshrc.example).
