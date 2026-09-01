@@ -1,0 +1,131 @@
+#!/bin/sh
+# retrocrt-check — fail if any colour in this repository is not canonical.
+#
+# The adapters restate the palette literally, because no two of these config
+# formats can share a file. This script is what stops that duplication from
+# rotting: every #rrggbb and every 38;2;r;g;b triple in the tree must appear in
+# retrocrt/palette. Anything else is drift and is reported with file and line.
+#
+#   retrocrt-check          check, print a usage summary
+#   retrocrt-check -q       exit status only
+#
+# Exit status: 0 clean, 1 drift found, 2 setup problem.
+
+set -eu
+
+root=$(unset CDPATH; cd -- "$(dirname -- "$0")/.." && pwd)
+palette="$root/retrocrt/palette"
+
+quiet=0
+[ "${1:-}" = "-q" ] && quiet=1
+
+if [ ! -f "$palette" ]; then
+  echo "retrocrt-check: no palette at $palette" >&2
+  exit 2
+fi
+
+# Track the working tree, not build output or cloned plugins.
+if [ -d "$root/.git" ] && command -v git >/dev/null 2>&1; then
+  files=$(git -C "$root" ls-files)
+else
+  files=$(cd "$root" && find . -type f ! -path './.git/*' | sed 's|^\./||')
+fi
+
+# Split on newlines only, so the awk exit status is not laundered through xargs
+# and filenames containing spaces still survive.
+oldifs=$IFS
+IFS='
+'
+# shellcheck disable=SC2086
+set -- $files
+IFS=$oldifs
+
+cd "$root" || exit 2
+awk -v palette="$palette" -v quiet="$quiet" '
+function hexval(s,   i, c, n, d) {
+  n = 0
+  for (i = 1; i <= length(s); i++) {
+    c = tolower(substr(s, i, 1))
+    d = index("0123456789abcdef", c) - 1
+    n = n * 16 + d
+  }
+  return n
+}
+function tohex(r, g, b) {
+  return sprintf("#%02x%02x%02x", r, g, b)
+}
+BEGIN {
+  h    = "[0-9a-fA-F]"
+  HEX  = "#" h "+"
+  RGB  = "38;2;[0-9]+;[0-9]+;[0-9]+"
+  drift = 0
+
+  while ((getline line < palette) > 0) {
+    if (match(line, "^RETROCRT_[A-Z_]+=.#" h h h h h h)) {
+      name = substr(line, 1, index(line, "=") - 1)
+      rest = substr(line, index(line, "#"))
+      colour = tolower(substr(rest, 1, 7))
+      known[colour] = name
+      order[++n] = colour
+    }
+  }
+  close(palette)
+  if (n == 0) {
+    print "retrocrt-check: palette contains no colours" > "/dev/stderr"
+    exit 2
+  }
+}
+# Never audit the palette against itself.
+FILENAME == "retrocrt/palette" { next }
+{
+  line = $0
+
+  # literal #rrggbb
+  s = line
+  while (match(s, HEX)) {
+    tok = substr(s, RSTART, RLENGTH)
+    s = substr(s, RSTART + RLENGTH)
+    if (length(tok) != 7) continue          # not a colour: sha, anchor, shorthand
+    colour = tolower(tok)
+    if (colour in known) {
+      used[colour]++
+    } else {
+      drift++
+      if (quiet == 0) printf "DRIFT %s:%d  %s\n", FILENAME, FNR, tok
+    }
+  }
+
+  # decimal truecolor, as used by LS_COLORS and raw escapes
+  s = line
+  while (match(s, RGB)) {
+    tok = substr(s, RSTART, RLENGTH)
+    s = substr(s, RSTART + RLENGTH)
+    split(substr(tok, 6), rgb, ";")
+    colour = tohex(rgb[1], rgb[2], rgb[3])
+    if (colour in known) {
+      used[colour]++
+    } else {
+      drift++
+      if (quiet == 0) printf "DRIFT %s:%d  %s (%s)\n", FILENAME, FNR, tok, colour
+    }
+  }
+}
+END {
+  if (quiet == 0) {
+    if (drift == 0) print "no drift: every colour in the tree is canonical"
+    print ""
+    print "palette usage"
+    unused = 0
+    for (i = 1; i <= n; i++) {
+      c = order[i]
+      printf "  %-28s %-9s %s\n", known[c], c, (c in used) ? used[c] " uses" : "UNUSED"
+      if (!(c in used)) unused++
+    }
+    if (unused > 0) {
+      print ""
+      print "  " unused " palette entries are unused; either adopt or remove them"
+    }
+  }
+  exit (drift > 0) ? 1 : 0
+}
+' "$@"

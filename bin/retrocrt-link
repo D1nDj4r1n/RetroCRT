@@ -1,0 +1,110 @@
+#!/bin/sh
+# retrocrt-link — symlink the adapters into place.
+#
+# Dry run by default: it prints what it would do and changes nothing. Nothing
+# is ever overwritten. A real file where a link should go is reported as a
+# conflict and left exactly as it is, because your existing config is assumed
+# to be right until you say otherwise.
+#
+#   retrocrt-link            show what would happen
+#   retrocrt-link --apply    create the links, skipping every conflict
+#   retrocrt-link --apply --force
+#                            move conflicting files aside to <name>.bak-<date>
+#                            first, then link
+#
+# Three files are never touched, because they are yours and only need one line
+# added to them: ~/.config/ghostty/config, ~/.zshrc and ~/.p10k.zsh. The
+# reminders are printed at the end.
+#
+# Exit status: 0 clean, 1 unresolved conflicts, 2 setup problem.
+
+set -eu
+
+root=$(unset CDPATH; cd -- "$(dirname -- "$0")/.." && pwd)
+config="${XDG_CONFIG_HOME:-$HOME/.config}"
+stamp=$(date +%Y%m%d%H%M%S)
+
+apply=0
+force=0
+for arg in "$@"; do
+  case "$arg" in
+    --apply) apply=1 ;;
+    --force) force=1 ;;
+    -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) echo "retrocrt-link: unknown option $arg" >&2; exit 2 ;;
+  esac
+done
+
+conflicts=0
+
+link() {
+  src="$root/$1"
+  dst="$2"
+
+  if [ ! -e "$src" ]; then
+    printf '  MISSING   %s (nothing to link)\n' "$1"
+    conflicts=$((conflicts + 1))
+    return
+  fi
+
+  if [ -L "$dst" ]; then
+    current=$(readlink "$dst")
+    if [ "$current" = "$src" ]; then
+      printf '  ok        %s\n' "$dst"
+      return
+    fi
+    printf '  CONFLICT  %s is a link to %s\n' "$dst" "$current"
+    [ "$force" -eq 0 ] && { conflicts=$((conflicts + 1)); return; }
+  elif [ -e "$dst" ]; then
+    printf '  CONFLICT  %s already exists\n' "$dst"
+    [ "$force" -eq 0 ] && { conflicts=$((conflicts + 1)); return; }
+  fi
+
+  if [ "$apply" -eq 0 ]; then
+    printf '  would link %s -> %s\n' "$dst" "$src"
+    return
+  fi
+
+  mkdir -p "$(dirname "$dst")"
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    mv "$dst" "$dst.bak-$stamp"
+    printf '  backed up %s -> %s.bak-%s\n' "$dst" "$dst" "$stamp"
+  fi
+  ln -s "$src" "$dst"
+  printf '  linked    %s -> %s\n' "$dst" "$src"
+}
+
+if [ "$apply" -eq 0 ]; then
+  echo
+  echo "  dry run — nothing will be changed. Re-run with --apply to install."
+fi
+echo
+
+link retrocrt                "$config/retrocrt"
+link vim/colors/retrocrt.vim "$HOME/.vim/colors/retrocrt.vim"
+link vim/vimrc               "$HOME/.vimrc"
+link nvim                    "$config/nvim"
+link yazi/theme.toml         "$config/yazi/theme.toml"
+link yazi/retrocrt.tmTheme   "$config/yazi/retrocrt.tmTheme"
+link ghostty/themes/retrocrt "$config/ghostty/themes/retrocrt"
+link zsh/retrocrt.zsh        "$config/zsh/retrocrt.zsh"
+link zsh/p10k.retrocrt.zsh   "$config/zsh/p10k.retrocrt.zsh"
+
+cat <<EOF
+
+  Left to you, one line each:
+
+    ~/.config/ghostty/config   theme = retrocrt
+    ~/.zshrc                   source ~/.config/zsh/retrocrt.zsh
+                               source ~/.config/zsh/p10k.retrocrt.zsh
+                               (after Oh My Zsh and after ~/.p10k.zsh;
+                                see zsh/zshrc.example for the full order)
+EOF
+
+if [ "$conflicts" -gt 0 ]; then
+  printf '\n  %d conflict(s) left alone. Reconcile them by hand, or re-run with --force.\n\n' "$conflicts"
+  exit 1
+fi
+
+echo
+exit 0

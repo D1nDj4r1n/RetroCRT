@@ -1,0 +1,81 @@
+#!/bin/sh
+# retrocrt-preview — render the palette in the terminal.
+#
+# Two things worth checking with your own eyes:
+#   1. the swatches, printed as truecolor, are the real palette
+#   2. the ANSI row, printed as plain colour indices, matches it
+#
+# If the two disagree, the terminal is not using the retrocrt theme.
+# WCAG contrast ratios against BACKGROUND are printed for each colour;
+# 4.5 is the readability floor for body text, 3.0 for large or dim text.
+
+set -eu
+
+root=$(unset CDPATH; cd -- "$(dirname -- "$0")/.." && pwd)
+palette="$root/retrocrt/palette"
+
+[ -f "$palette" ] || { echo "retrocrt-preview: no palette at $palette" >&2; exit 2; }
+
+awk -v palette="$palette" '
+function hexval(s,   i, c, n, d) {
+  n = 0
+  for (i = 1; i <= length(s); i++) {
+    c = tolower(substr(s, i, 1))
+    d = index("0123456789abcdef", c) - 1
+    n = n * 16 + d
+  }
+  return n
+}
+function chan(c) { return (c <= 0.03928) ? c / 12.92 : ((c + 0.055) / 1.055) ^ 2.4 }
+function lum(hex,   r, g, b) {
+  r = chan(hexval(substr(hex, 2, 2)) / 255)
+  g = chan(hexval(substr(hex, 4, 2)) / 255)
+  b = chan(hexval(substr(hex, 6, 2)) / 255)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+function ratio(a, b,   la, lb, t) {
+  la = lum(a); lb = lum(b)
+  if (la < lb) { t = la; la = lb; lb = t }
+  return (la + 0.05) / (lb + 0.05)
+}
+function rgb(hex) {
+  return hexval(substr(hex, 2, 2)) ";" hexval(substr(hex, 4, 2)) ";" hexval(substr(hex, 6, 2))
+}
+function swatch(hex) { return "\033[48;2;" rgb(hex) "m      \033[0m" }
+function ontop(hex, bg, s) {
+  return "\033[48;2;" rgb(bg) "m\033[38;2;" rgb(hex) "m" s "\033[0m"
+}
+BEGIN {
+  h = "[0-9a-fA-F]"
+  while ((getline line < palette) > 0) {
+    if (match(line, "^RETROCRT_[A-Z_]+=.#" h h h h h h)) {
+      name = substr(line, 10, index(line, "=") - 10)
+      colour = tolower(substr(line, index(line, "#"), 7))
+      names[++n] = name
+      hex[n] = colour
+      if (name == "BACKGROUND") bg = colour
+    }
+  }
+  close(palette)
+
+  printf "\n  retrocrt — palette (contrast measured against BACKGROUND %s)\n\n", bg
+  for (i = 1; i <= n; i++) {
+    cr = ratio(hex[i], bg)
+    printf "  %s  %-22s %s  %5.2f  %s\n",
+      swatch(hex[i]), names[i], hex[i], cr,
+      ontop(hex[i], bg, " The quick brown fox ")
+  }
+
+  printf "\n  ANSI, as the terminal actually renders it\n\n   "
+  for (i = 0; i <= 7; i++) printf "\033[4%dm    \033[0m", i
+  printf "   0-7  normal\n   "
+  for (i = 0; i <= 7; i++) printf "\033[10%dm    \033[0m", i
+  printf "   8-15 bright\n"
+
+  printf "\n  CRT state language\n\n   "
+  printf " %s %s %s\n\n",
+    ontop("#0a0e14", "#00d4c8", " NORMAL "),
+    ontop("#0a0e14", "#ffb020", " INSERT "),
+    ontop("#0a0e14", "#e040a0", " VISUAL ")
+}
+' </dev/null
