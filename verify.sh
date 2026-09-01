@@ -146,12 +146,30 @@ echo "=== tmux adapter ==="
 if grep -q 'bind-key\|bind -' adapters/tmux/retrocrt.conf; then
   bad "tmux adapter contains keybinds"
 else
-  ok "tmux adapter is colors only"
+  ok "tmux adapter has no keybinds"
 fi
-if grep -Eq '^\s*set(-option)?[[:space:]]+(-[gw]+[[:space:]]+)?-g[[:space:]]+(status-left|status-right|window-status-format|window-status-current-format)[[:space:]]' adapters/tmux/retrocrt.conf; then
-  bad "tmux adapter rewrites status layout"
+if grep -q 'status-left " #' adapters/tmux/retrocrt.conf && grep -q 'battery' adapters/tmux/retrocrt.conf; then
+  ok "tmux status-left is battery"
 else
-  ok "tmux adapter does not rewrite status layout"
+  bad "tmux status-left missing battery"
+fi
+if grep -q '%Y-%m-%d' adapters/tmux/retrocrt.conf; then
+  ok "tmux status-right is date"
+else
+  bad "tmux status-right missing date"
+fi
+if grep -Eq '^\s*set(-option)?[[:space:]]+(-[gw]+[[:space:]]+)?-g[[:space:]]+(window-status-format|window-status-current-format)[[:space:]]' adapters/tmux/retrocrt.conf; then
+  bad "tmux adapter rewrites window-status-format"
+else
+  ok "tmux adapter does not rewrite window-status-format"
+fi
+need_hex adapters/tmux/battery $GREEN $AMBER $RED $DIM && ok "tmux battery uses semantic colors"
+if [ -x "${ROOT}/adapters/tmux/battery" ] || [ -f "${ROOT}/adapters/tmux/battery" ]; then
+  batout=$(sh "${ROOT}/adapters/tmux/battery") || true
+  case "$batout" in
+    *BAT*) ok "tmux battery script runs (${batout})" ;;
+    *) bad "tmux battery script unexpected: ${batout}" ;;
+  esac
 fi
 if command -v tmux >/dev/null 2>&1; then
   sock=retrocrt-verify
@@ -178,6 +196,16 @@ if command -v tmux >/dev/null 2>&1; then
     case "$msg" in
       *'#ffb020'*) ok "tmux command prompt is AMBER" ;;
       *) bad "tmux message-style unexpected: ${msg}" ;;
+    esac
+    left=$(tmux -L "$sock" show -gv status-left 2>/dev/null || true)
+    case "$left" in
+      *battery*) ok "tmux status-left calls battery" ;;
+      *) bad "tmux status-left unexpected: ${left}" ;;
+    esac
+    right=$(tmux -L "$sock" show -gv status-right 2>/dev/null || true)
+    case "$right" in
+      *'%Y-%m-%d'*) ok "tmux status-right is date" ;;
+      *) bad "tmux status-right unexpected: ${right}" ;;
     esac
   fi
   tmux -L "$sock" kill-server >/dev/null 2>&1 || true

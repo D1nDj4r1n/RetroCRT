@@ -113,6 +113,10 @@ tmux mapping:
 | pane in copy-mode | MAGENTA |
 | activity | AMBER |
 | bell | RED |
+| battery healthy | GREEN |
+| battery low | AMBER |
+| battery critical | RED |
+| date | BLUE |
 
 ## APPLICATION ADAPTERS
 
@@ -123,7 +127,7 @@ tmux mapping:
 | oil.nvim | groups in the Neovim adapter | in-editor explorer |
 | Yazi | `adapters/yazi/theme.toml` | terminal file manager |
 | Ghostty | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
-| tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode |
+| tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 
 Vim and Neovim stay distinct. Yazi and oil.nvim stay distinct.
@@ -143,8 +147,6 @@ Do not download a random marketplace theme.
 If the application cannot use the full palette, map the closest roles and note the gap.
 
 Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
-
-Known deviation: tmux has no success chrome. `GREEN` is unused there.
 
 ## ANTI-DRIFT
 
@@ -220,7 +222,7 @@ nvim -c 'colorscheme retrocrt'
 yazi
 # Ghostty: theme = retrocrt
 # zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion
-# tmux: source-file the adapter, check status bar + copy-mode
+# tmux: battery left, date right; copy-mode MAGENTA
 ```
 
 ---
@@ -279,7 +281,7 @@ None in-repo. Possible on the workstation: an existing `~/.vim/colors/retrocrt.v
 - Full `~/.p10k.zsh` layout
 - Oh My Zsh plugin list and `bindkey -v`
 - Full Vimrc / Neovim IDE (LSP, language packs, keymaps)
-- tmux prefix, keybinds, plugins, and status-left/right content
+- tmux prefix, keybinds, and plugins
 - `pack/retro` plugin manager
 - oil.nvim and Yazi as separate tools (neither removed)
 
