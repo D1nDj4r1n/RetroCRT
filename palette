@@ -1,0 +1,71 @@
+# retrocrt canonical palette
+# Source of truth for HEX values. Adapters copy these; they do not invent colors.
+# Format: POSIX sh / zsh sourceable. Comments start with #.
+
+# ---------------------------------------------------------------------------
+# Canonical
+# ---------------------------------------------------------------------------
+BACKGROUND=#0a0e14
+BACKGROUND_ALT=#121820
+FOREGROUND=#c8d0d8
+DIM=#5a6570
+CYAN=#00d4c8
+AMBER=#ffb020
+MAGENTA=#e040a0
+GREEN=#40c070
+RED=#e05050
+BLUE=#4080c0
+
+# ---------------------------------------------------------------------------
+# Derived / supporting (retained from the Vim reference colorscheme)
+# ---------------------------------------------------------------------------
+VISUAL_BG=#1e3a4c
+DIFF_ADD_BG=#122018
+DIFF_DELETE_BG=#201212
+DIFF_CHANGE_BG=#201a10
+
+# Bright ANSI: same hue, mixed ~20% toward white. No new hues.
+BRIGHT_BLACK=#5a6570
+BRIGHT_RED=#e67373
+BRIGHT_GREEN=#66cd8d
+BRIGHT_YELLOW=#ffc04d
+BRIGHT_BLUE=#6699cd
+BRIGHT_MAGENTA=#e666b3
+BRIGHT_CYAN=#33ddd3
+BRIGHT_WHITE=#d8e0e8
+
+# ---------------------------------------------------------------------------
+# ANSI 16 mapping
+# ---------------------------------------------------------------------------
+#  0 black          BACKGROUND
+#  1 red            RED
+#  2 green          GREEN
+#  3 yellow         AMBER
+#  4 blue           BLUE
+#  5 magenta        MAGENTA
+#  6 cyan           CYAN
+#  7 white          FOREGROUND
+#  8 bright-black   DIM
+#  9 bright-red     BRIGHT_RED
+# 10 bright-green   BRIGHT_GREEN
+# 11 bright-yellow  BRIGHT_YELLOW
+# 12 bright-blue    BRIGHT_BLUE
+# 13 bright-magenta BRIGHT_MAGENTA
+# 14 bright-cyan    BRIGHT_CYAN
+# 15 bright-white   BRIGHT_WHITE
+ANSI_BLACK=$BACKGROUND
+ANSI_RED=$RED
+ANSI_GREEN=$GREEN
+ANSI_YELLOW=$AMBER
+ANSI_BLUE=$BLUE
+ANSI_MAGENTA=$MAGENTA
+ANSI_CYAN=$CYAN
+ANSI_WHITE=$FOREGROUND
+ANSI_BRIGHT_BLACK=$DIM
+ANSI_BRIGHT_RED=$BRIGHT_RED
+ANSI_BRIGHT_GREEN=$BRIGHT_GREEN
+ANSI_BRIGHT_YELLOW=$BRIGHT_YELLOW
+ANSI_BRIGHT_BLUE=$BRIGHT_BLUE
+ANSI_BRIGHT_MAGENTA=$BRIGHT_MAGENTA
+ANSI_BRIGHT_CYAN=$BRIGHT_CYAN
+ANSI_BRIGHT_WHITE=$BRIGHT_WHITE
