@@ -1,0 +1,51 @@
+# retrocrt — canonical palette
+#
+# This file is the single source of truth for every colour used on this
+# workstation. It is plain POSIX shell so it can be sourced, cat'ed, grepped,
+# or parsed by a three-line script in any language:
+#
+#   . ~/.config/retrocrt/palette
+#   echo "$RETROCRT_CYAN"
+#
+# Adapters (vim, nvim, yazi, ghostty, zsh) restate these values literally,
+# because none of those file formats can read a shared file at load time.
+# That duplication is deliberate and is kept honest by `retrocrt-check`,
+# which fails if any file in this repository contains a colour not listed here.
+#
+# The meaning of each role is defined in README.md. Do not add a colour here
+# without giving it a semantic role there.
+
+# --- canonical ---------------------------------------------------------------
+# The ten colours of the design system. Everything else is derived from these.
+
+RETROCRT_BACKGROUND='#0a0e14'
+RETROCRT_BACKGROUND_ALT='#121820'
+RETROCRT_FOREGROUND='#c8d0d8'
+RETROCRT_DIM='#5a6570'
+RETROCRT_CYAN='#00d4c8'
+RETROCRT_AMBER='#ffb020'
+RETROCRT_MAGENTA='#e040a0'
+RETROCRT_GREEN='#40c070'
+RETROCRT_RED='#e05050'
+RETROCRT_BLUE='#4080c0'
+
+# --- derived: surfaces --------------------------------------------------------
+# Low-luminance backgrounds. They are tints of BACKGROUND, never text colours.
+# Inherited from the original Vim colorscheme; kept as supporting colours.
+
+RETROCRT_SELECTION='#1e3a4c'      # Visual, MatchParen, selected rows
+RETROCRT_DIFF_ADD_BG='#122018'    # added lines
+RETROCRT_DIFF_DEL_BG='#201212'    # deleted lines
+RETROCRT_DIFF_CHG_BG='#201a10'    # changed lines
+
+# --- derived: bright ANSI ------------------------------------------------------
+# Conservative lightenings of the canonical hues, used only for ANSI slots 9-15.
+# No new hues are introduced. ANSI 8 (bright black) is DIM; ANSI 0-7 are canonical.
+
+RETROCRT_BRIGHT_RED='#f07070'
+RETROCRT_BRIGHT_GREEN='#60d890'
+RETROCRT_BRIGHT_AMBER='#ffc850'
+RETROCRT_BRIGHT_BLUE='#60a0e0'
+RETROCRT_BRIGHT_MAGENTA='#f060c0'
+RETROCRT_BRIGHT_CYAN='#40ece0'
+RETROCRT_BRIGHT_WHITE='#e8f0f8'
