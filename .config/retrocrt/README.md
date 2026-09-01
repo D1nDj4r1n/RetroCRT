@@ -27,7 +27,7 @@ making them share responsibilities or depend on a theme framework.
 
 Supporting surface colors retain the reference Vim design:
 
-- `VISUAL=#1e3a4c`
+- `VISUAL_BG=#1e3a4c`
 - `DIFF_ADD_BG=#122018`
 - `DIFF_DELETE_BG=#201212`
 - `DIFF_CHANGE_BG=#201a10`

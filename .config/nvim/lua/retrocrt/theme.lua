@@ -33,13 +33,13 @@ function M.setup()
     FoldColumn = { fg = p.DIM, bg = p.BACKGROUND },
     Folded = { fg = p.DIM, bg = p.BACKGROUND_ALT },
 
-    Visual = { fg = p.FOREGROUND, bg = p.VISUAL },
-    VisualNOS = { fg = p.FOREGROUND, bg = p.VISUAL },
+    Visual = { fg = p.FOREGROUND, bg = p.VISUAL_BG },
+    VisualNOS = { fg = p.FOREGROUND, bg = p.VISUAL_BG },
     Search = { fg = p.BACKGROUND, bg = p.AMBER },
     IncSearch = { fg = p.BACKGROUND, bg = p.CYAN, bold = true },
     CurSearch = { fg = p.BACKGROUND, bg = p.CYAN, bold = true },
     Substitute = { fg = p.BACKGROUND, bg = p.MAGENTA },
-    MatchParen = { fg = p.CYAN, bg = p.VISUAL, bold = true },
+    MatchParen = { fg = p.CYAN, bg = p.VISUAL_BG, bold = true },
 
     StatusLine = { fg = p.FOREGROUND, bg = p.BACKGROUND_ALT },
     StatusLineNC = { fg = p.DIM, bg = p.BACKGROUND_ALT },

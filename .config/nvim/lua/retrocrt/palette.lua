@@ -11,7 +11,7 @@ local required = {
   "GREEN",
   "RED",
   "BLUE",
-  "VISUAL",
+  "VISUAL_BG",
   "DIFF_ADD_BG",
   "DIFF_DELETE_BG",
   "DIFF_CHANGE_BG",

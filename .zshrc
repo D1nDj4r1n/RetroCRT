@@ -18,9 +18,18 @@ else
   print -u2 "retrocrt: palette not found: $RETROCRT_PALETTE"
 fi
 
+function retrocrt_sgr() {
+  local hex="${1#\#}"
+  printf '38;2;%d;%d;%d' \
+    "$(( 16#${hex[1,2]} ))" \
+    "$(( 16#${hex[3,4]} ))" \
+    "$(( 16#${hex[5,6]} ))"
+}
+
 export CLICOLOR=1
-export LS_COLORS="di=1;38;2;0;212;200:ln=38;2;64;128;192:ex=38;2;64;192;112:or=1;38;2;224;80;80:mi=1;38;2;224;80;80:pi=38;2;90;101;112:so=38;2;90;101;112:bd=38;2;90;101;112:cd=38;2;90;101;112"
-export GREP_COLORS="ms=38;2;255;176;32:mc=38;2;255;176;32:fn=38;2;64;128;192:ln=38;2;90;101;112:se=38;2;90;101;112"
+export LS_COLORS="di=1;$(retrocrt_sgr "$CYAN"):ln=$(retrocrt_sgr "$BLUE"):ex=$(retrocrt_sgr "$GREEN"):or=1;$(retrocrt_sgr "$RED"):mi=1;$(retrocrt_sgr "$RED"):pi=$(retrocrt_sgr "$DIM"):so=$(retrocrt_sgr "$DIM"):bd=$(retrocrt_sgr "$DIM"):cd=$(retrocrt_sgr "$DIM")"
+export GREP_COLORS="ms=$(retrocrt_sgr "$AMBER"):mc=$(retrocrt_sgr "$AMBER"):fn=$(retrocrt_sgr "$BLUE"):ln=$(retrocrt_sgr "$DIM"):se=$(retrocrt_sgr "$DIM")"
+unfunction retrocrt_sgr
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
 # Configure plugin colors before loading them.
