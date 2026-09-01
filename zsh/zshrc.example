@@ -1,0 +1,59 @@
+# ~/.zshrc — reference ordering
+#
+# This is not a drop-in replacement for your .zshrc. It exists to document the
+# one thing that is easy to get wrong and hard to notice: load order.
+#
+#   plugins=(...)                  syntax-highlighting LAST in the array
+#        v
+#   source $ZSH/oh-my-zsh.sh       Oh My Zsh loads the plugins in that order
+#        v
+#   bindkey -v                     vi mode
+#        v
+#   source ~/.p10k.zsh             your prompt, untouched
+#        v
+#   source retrocrt.zsh            colours, after the plugins that own them
+#        v
+#   source p10k.retrocrt.zsh       prompt colours, after p10k
+#
+# Two rules matter:
+#   1. zsh-syntax-highlighting must be the last entry in `plugins`. It wraps
+#      every widget defined before it; anything loaded afterwards is not
+#      highlighted. zsh-autosuggestions in particular must come before it.
+#   2. retrocrt.zsh must be sourced after Oh My Zsh, because
+#      zsh-syntax-highlighting installs its own default styles when it loads.
+
+# --- Powerlevel10k instant prompt (keep at the very top) -----------------------
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# --- Oh My Zsh ------------------------------------------------------------------
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+plugins=(
+  git
+  zsh-autosuggestions
+  zsh-syntax-highlighting   # LAST: it wraps everything defined before it
+)
+
+source "$ZSH/oh-my-zsh.sh"
+
+# --- editors ---------------------------------------------------------------------
+# Vim is the quick editor, Neovim is the IDE. Both, deliberately.
+export EDITOR=vim
+export VISUAL=vim
+export GIT_EDITOR=vim
+alias ide=nvim
+
+# --- vi mode ----------------------------------------------------------------------
+bindkey -v
+export KEYTIMEOUT=1
+
+# --- prompt -----------------------------------------------------------------------
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
+# --- retrocrt ----------------------------------------------------------------------
+# Colours last, so nothing loaded later can overwrite them.
+[[ -f ~/.config/zsh/retrocrt.zsh ]] && source ~/.config/zsh/retrocrt.zsh
+[[ -f ~/.config/zsh/p10k.retrocrt.zsh ]] && source ~/.config/zsh/p10k.retrocrt.zsh
