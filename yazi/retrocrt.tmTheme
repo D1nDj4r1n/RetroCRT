@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  retrocrt — syntax highlighting for Yazi's code preview.
+
+  Yazi highlights previews with syntect, which only understands tmTheme files.
+  This is the same semantic mapping as the Vim and Neovim adapters, expressed
+  in the one format syntect accepts. Referenced from theme.toml as
+  `syntect_theme`. It is not used by anything else.
+-->
+<plist version="1.0">
+<dict>
+  <key>name</key>
+  <string>retrocrt</string>
+  <key>settings</key>
+  <array>
+
+    <dict>
+      <key>settings</key>
+      <dict>
+        <key>background</key><string>#0a0e14</string>
+        <key>foreground</key><string>#c8d0d8</string>
+        <key>caret</key><string>#00d4c8</string>
+        <key>lineHighlight</key><string>#121820</string>
+        <key>selection</key><string>#1e3a4c</string>
+        <key>invisibles</key><string>#5a6570</string>
+        <key>gutterForeground</key><string>#5a6570</string>
+      </dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Comment</string>
+      <key>scope</key><string>comment, punctuation.definition.comment</string>
+      <key>settings</key><dict><key>foreground</key><string>#5a6570</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>String</string>
+      <key>scope</key><string>string, constant.character</string>
+      <key>settings</key><dict><key>foreground</key><string>#ffb020</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Number</string>
+      <key>scope</key><string>constant.numeric</string>
+      <key>settings</key><dict><key>foreground</key><string>#4080c0</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Constant</string>
+      <key>scope</key><string>constant.language, constant.other, support.constant</string>
+      <key>settings</key><dict><key>foreground</key><string>#e040a0</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Variable</string>
+      <key>scope</key><string>variable, variable.other, meta.definition.variable</string>
+      <key>settings</key><dict><key>foreground</key><string>#c8d0d8</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Parameter</string>
+      <key>scope</key><string>variable.parameter, entity.other.attribute-name</string>
+      <key>settings</key><dict><key>foreground</key><string>#4080c0</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Keyword</string>
+      <key>scope</key><string>keyword, keyword.control, keyword.other, storage.modifier</string>
+      <key>settings</key><dict><key>foreground</key><string>#00d4c8</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Operator</string>
+      <key>scope</key><string>keyword.operator, punctuation</string>
+      <key>settings</key><dict><key>foreground</key><string>#c8d0d8</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Type</string>
+      <key>scope</key><string>storage.type, entity.name.type, entity.name.class, support.type, support.class</string>
+      <key>settings</key><dict><key>foreground</key><string>#e040a0</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Function</string>
+      <key>scope</key><string>entity.name.function, support.function, meta.function-call</string>
+      <key>settings</key><dict><key>foreground</key><string>#40c070</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Preprocessor</string>
+      <key>scope</key><string>meta.preprocessor, keyword.control.import, keyword.control.at-rule</string>
+      <key>settings</key><dict><key>foreground</key><string>#e040a0</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Tag</string>
+      <key>scope</key><string>entity.name.tag</string>
+      <key>settings</key><dict><key>foreground</key><string>#00d4c8</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Escape</string>
+      <key>scope</key><string>constant.character.escape, string.regexp</string>
+      <key>settings</key><dict><key>foreground</key><string>#4080c0</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Invalid</string>
+      <key>scope</key><string>invalid, invalid.illegal</string>
+      <key>settings</key><dict><key>foreground</key><string>#e05050</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Heading</string>
+      <key>scope</key><string>markup.heading</string>
+      <key>settings</key>
+      <dict>
+        <key>foreground</key><string>#00d4c8</string>
+        <key>fontStyle</key><string>bold</string>
+      </dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Link</string>
+      <key>scope</key><string>markup.underline.link</string>
+      <key>settings</key><dict><key>foreground</key><string>#4080c0</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Raw</string>
+      <key>scope</key><string>markup.raw, markup.inline.raw</string>
+      <key>settings</key><dict><key>foreground</key><string>#ffb020</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Diff inserted</string>
+      <key>scope</key><string>markup.inserted</string>
+      <key>settings</key><dict><key>foreground</key><string>#40c070</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Diff deleted</string>
+      <key>scope</key><string>markup.deleted</string>
+      <key>settings</key><dict><key>foreground</key><string>#e05050</string></dict>
+    </dict>
+
+    <dict>
+      <key>name</key><string>Diff changed</string>
+      <key>scope</key><string>markup.changed</string>
+      <key>settings</key><dict><key>foreground</key><string>#ffb020</string></dict>
+    </dict>
+
+  </array>
+</dict>
+</plist>

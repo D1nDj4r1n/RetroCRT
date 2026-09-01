@@ -1,0 +1,144 @@
+# retrocrt — Yazi adapter
+#
+# Hand-written, not a flavor pack. Yazi is another application running on the
+# same CRT workstation, so it uses the same ten colours and the same meanings.
+#
+# Restraint rule: a directory does not get its own colour because Yazi allows
+# it. Only four filesystem roles are coloured, and they are the same four used
+# by netrw, oil.nvim and LS_COLORS:
+#
+#   directory cyan · executable green · symlink magenta · broken red
+#
+# Section names follow Yazi >= 25.5.28. On older versions [mgr] was [manager].
+# Validate with:  taplo check --schema https://yazi-rs.github.io/schemas/theme.json theme.toml
+
+"$schema" = "https://yazi-rs.github.io/schemas/theme.json"
+
+# No flavor pack. The styles below are the theme.
+[flavor]
+dark = ""
+light = ""
+
+[mgr]
+cwd = { fg = "#00d4c8" }
+
+# Search: amber, the same as Vim's Search.
+find_keyword = { fg = "#ffb020", bold = true }
+find_position = { fg = "#e040a0", bg = "reset", bold = true }
+
+symlink_target = { fg = "#5a6570" }
+
+# Pending operations: amber for selected, green/red for the destructive pair.
+marker_selected = { fg = "#ffb020", bg = "#ffb020" }
+marker_copied = { fg = "#40c070", bg = "#40c070" }
+marker_cut = { fg = "#e05050", bg = "#e05050" }
+marker_marked = { fg = "#00d4c8", bg = "#00d4c8" }
+
+count_selected = { fg = "#0a0e14", bg = "#ffb020" }
+count_copied = { fg = "#0a0e14", bg = "#40c070" }
+count_cut = { fg = "#0a0e14", bg = "#e05050" }
+
+border_symbol = "│"
+border_style = { fg = "#5a6570" }
+
+# Code preview. Without this Yazi falls back to a syntect theme that has
+# nothing to do with retrocrt, which is the most visible drift in the app.
+syntect_theme = "~/.config/yazi/retrocrt.tmTheme"
+
+# The hovered row is the active one. Older Yazi called these
+# mgr.hovered and mgr.preview_hovered.
+[indicator]
+current = { fg = "#0a0e14", bg = "#00d4c8" }
+parent = { fg = "#c8d0d8", bg = "#1e3a4c" }
+preview = { underline = true }
+
+[tabs]
+active = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+inactive = { fg = "#5a6570", bg = "#121820" }
+
+# CRT state language: normal cyan, select magenta (selection), unset red.
+[mode]
+normal_main = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+normal_alt = { fg = "#00d4c8", bg = "#121820" }
+select_main = { fg = "#0a0e14", bg = "#e040a0", bold = true }
+select_alt = { fg = "#e040a0", bg = "#121820" }
+unset_main = { fg = "#0a0e14", bg = "#e05050", bold = true }
+unset_alt = { fg = "#e05050", bg = "#121820" }
+
+[status]
+# Permission bits use the same colours as oil.nvim.
+perm_sep = { fg = "#5a6570" }
+perm_type = { fg = "#00d4c8" }
+perm_read = { fg = "#ffb020" }
+perm_write = { fg = "#e05050" }
+perm_exec = { fg = "#40c070" }
+
+progress_label = { fg = "#c8d0d8", bold = true }
+progress_normal = { fg = "#00d4c8", bg = "#121820" }
+progress_error = { fg = "#e05050", bg = "#121820" }
+
+[which]
+cols = 3
+mask = { bg = "#121820" }
+cand = { fg = "#00d4c8" }
+rest = { fg = "#5a6570" }
+desc = { fg = "#c8d0d8" }
+separator = "  "
+separator_style = { fg = "#5a6570" }
+
+[confirm]
+border = { fg = "#5a6570" }
+title = { fg = "#00d4c8" }
+body = { fg = "#c8d0d8" }
+list = { fg = "#c8d0d8" }
+btn_yes = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+btn_no = { fg = "#c8d0d8", bg = "#121820" }
+
+[spot]
+border = { fg = "#5a6570" }
+title = { fg = "#00d4c8" }
+tbl_col = { fg = "#00d4c8" }
+tbl_cell = { fg = "#0a0e14", bg = "#ffb020" }
+
+[notify]
+title_info = { fg = "#40c070" }
+title_warn = { fg = "#ffb020" }
+title_error = { fg = "#e05050" }
+
+[pick]
+border = { fg = "#5a6570" }
+active = { fg = "#00d4c8", bold = true }
+inactive = { fg = "#c8d0d8" }
+
+[input]
+border = { fg = "#00d4c8" }
+title = { fg = "#c8d0d8" }
+value = { fg = "#c8d0d8" }
+selected = { bg = "#1e3a4c" }
+
+[cmp]
+border = { fg = "#5a6570" }
+active = { fg = "#0a0e14", bg = "#00d4c8" }
+inactive = { fg = "#c8d0d8" }
+
+[tasks]
+border = { fg = "#5a6570" }
+title = { fg = "#00d4c8" }
+hovered = { fg = "#ffb020" }
+
+[help]
+on = { fg = "#00d4c8" }
+run = { fg = "#40c070" }
+desc = { fg = "#c8d0d8" }
+hovered = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+footer = { fg = "#5a6570", bg = "#121820" }
+
+# Four roles, not a colour per file type. Plain files keep the foreground.
+[filetype]
+rules = [
+  { url = "*", is = "orphan", fg = "#e05050" },
+  { url = "*/", is = "link", fg = "#e040a0" },
+  { url = "*", is = "link", fg = "#e040a0" },
+  { url = "*", is = "exec", fg = "#40c070" },
+  { url = "*/", fg = "#00d4c8" },
+]

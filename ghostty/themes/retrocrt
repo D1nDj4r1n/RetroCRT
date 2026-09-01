@@ -1,0 +1,44 @@
+# retrocrt — Ghostty adapter
+#
+# A Ghostty theme is an ordinary config file that is loaded before the user
+# config, so anything set in ~/.config/ghostty/config still wins. This file
+# therefore sets colour and nothing else: no font, no size, no padding, no
+# opacity, no window behaviour. Those are personal preferences and are not
+# part of the design system.
+#
+# Install:  ~/.config/ghostty/themes/retrocrt
+# Enable:   add `theme = retrocrt` to ~/.config/ghostty/config
+#
+# This ANSI mapping is the contract every other application relies on. Anything
+# that can only speak in colour indices (Powerlevel10k, ls, most TUIs) becomes
+# retrocrt-coloured for free because of the table below.
+
+background = #0a0e14
+foreground = #c8d0d8
+
+cursor-color = #00d4c8
+cursor-text = #0a0e14
+
+selection-background = #1e3a4c
+selection-foreground = #c8d0d8
+
+# Normal: the canonical palette, one hue per slot.
+palette = 0=#0a0e14
+palette = 1=#e05050
+palette = 2=#40c070
+palette = 3=#ffb020
+palette = 4=#4080c0
+palette = 5=#e040a0
+palette = 6=#00d4c8
+palette = 7=#c8d0d8
+
+# Bright: 8 is DIM, so faint text stays legible. 9-15 are conservative
+# lightenings of the same hues; no new colours are introduced here.
+palette = 8=#5a6570
+palette = 9=#f07070
+palette = 10=#60d890
+palette = 11=#ffc850
+palette = 12=#60a0e0
+palette = 13=#f060c0
+palette = 14=#40ece0
+palette = 15=#e8f0f8
