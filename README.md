@@ -17,6 +17,8 @@ Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, s
        │                               │
        └──────────── Ghostty ──────────┘
                        │
+                      tmux
+                       │
                       zsh
                        │
                   Powerlevel10k
@@ -99,7 +101,18 @@ Bright ANSI (same hues, mixed ~20% toward white):
 | VISUAL | MAGENTA |
 | REPLACE | RED (destructive edit) |
 
-Applied where a mode indicator exists (Vim/Neovim statusline, Yazi mode, p10k vi prompt character). Not forced onto applications without that concept.
+Applied where a mode indicator exists (Vim/Neovim statusline, Yazi mode, p10k vi prompt character, tmux). Not forced onto applications without that concept.
+
+tmux mapping:
+
+| tmux | Role |
+| --- | --- |
+| active window / pane | NORMAL / CYAN |
+| command prompt / messages | INSERT / AMBER |
+| copy-mode selection | VISUAL / VISUAL_BG |
+| pane in copy-mode | MAGENTA |
+| activity | AMBER |
+| bell | RED |
 
 ## APPLICATION ADAPTERS
 
@@ -110,6 +123,7 @@ Applied where a mode indicator exists (Vim/Neovim statusline, Yazi mode, p10k vi
 | oil.nvim | groups in the Neovim adapter | in-editor explorer |
 | Yazi | `adapters/yazi/theme.toml` | terminal file manager |
 | Ghostty | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
+| tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 
 Vim and Neovim stay distinct. Yazi and oil.nvim stay distinct.
@@ -130,6 +144,8 @@ If the application cannot use the full palette, map the closest roles and note t
 
 Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
 
+Known deviation: tmux has no success chrome. `GREEN` is unused there.
+
 ## ANTI-DRIFT
 
 - Change HEX in `palette` first, then adapters.
@@ -137,7 +153,7 @@ Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assign
 - Do not introduce synthwave / vaporwave / RGB gaming palettes.
 - Do not recolor every file type just because a UI allows it.
 - Do not replace `pack/retro` or any hand-managed Neovim packs with Lazy/Packer/vim-plug.
-- Do not put fonts, padding, opacity, or p10k layout into adapters.
+- Do not put fonts, padding, opacity, p10k layout, or tmux keybinds into adapters.
 
 ## INSTALL
 
@@ -169,6 +185,11 @@ theme = retrocrt
 source ~/.config/retrocrt/adapters/zsh/retrocrt.zsh
 ```
 
+```tmux
+# ~/.tmux.conf
+source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
+```
+
 Required zsh order:
 
 ```text
@@ -183,7 +204,7 @@ zsh-syntax-highlighting     LAST among plugins
 source retrocrt.zsh         color overlay
 ```
 
-`install.sh` does not rewrite `~/.p10k.zsh`, Ghostty font/padding/opacity, or editor keymaps.
+`install.sh` does not rewrite `~/.p10k.zsh`, Ghostty font/padding/opacity, editor keymaps, or tmux keybinds.
 
 ## VALIDATE
 
@@ -199,6 +220,7 @@ nvim -c 'colorscheme retrocrt'
 yazi
 # Ghostty: theme = retrocrt
 # zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion
+# tmux: source-file the adapter, check status bar + copy-mode
 ```
 
 ---
@@ -257,6 +279,7 @@ None in-repo. Possible on the workstation: an existing `~/.vim/colors/retrocrt.v
 - Full `~/.p10k.zsh` layout
 - Oh My Zsh plugin list and `bindkey -v`
 - Full Vimrc / Neovim IDE (LSP, language packs, keymaps)
+- tmux prefix, keybinds, plugins, and status-left/right content
 - `pack/retro` plugin manager
 - oil.nvim and Yazi as separate tools (neither removed)
 

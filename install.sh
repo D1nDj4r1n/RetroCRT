@@ -18,10 +18,10 @@ install.sh [options]
 
 Installs visual adapters only:
   Vim colorscheme, Neovim colorscheme + oil highlights,
-  Yazi theme.toml, Ghostty theme, zsh color fragment.
+  Yazi theme.toml, Ghostty theme, zsh color fragment, tmux styles.
 
 Does not change: fonts, Ghostty padding/opacity, bindkey,
-Oh My Zsh plugin lists, or the body of ~/.p10k.zsh.
+Oh My Zsh plugin lists, the body of ~/.p10k.zsh, or tmux keybinds.
 EOF
 }
 
@@ -134,5 +134,8 @@ echo "    theme = retrocrt"
 echo
 echo "  zsh (~/.zshrc) AFTER oh-my-zsh, p10k, and syntax-highlighting:"
 echo "    source ${DEST}/adapters/zsh/retrocrt.zsh"
+echo
+echo "  tmux (~/.tmux.conf):"
+echo "    source-file ${DEST}/adapters/tmux/retrocrt.conf"
 echo
 echo "Do not move syntax-highlighting earlier than last among plugins."

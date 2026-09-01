@@ -66,6 +66,10 @@ fi
 need_hex adapters/vim/colors/retrocrt.vim $DERIVED && ok "vim derived colors"
 need_hex adapters/nvim/lua/retrocrt.lua $DERIVED && ok "nvim derived colors"
 need_hex adapters/ghostty/retrocrt "$BRIGHT_RED" "$BRIGHT_CYAN" "$VISUAL_BG" && ok "ghostty ANSI brights"
+# tmux: GREEN has no chrome role (documented deviation).
+if need_hex adapters/tmux/retrocrt.conf $BACKGROUND $BACKGROUND_ALT $FOREGROUND $DIM $CYAN $AMBER $MAGENTA $RED $BLUE $VISUAL_BG; then
+  ok "adapters/tmux/retrocrt.conf canonical colors"
+fi
 
 echo
 echo "=== vim colorscheme ==="
@@ -136,6 +140,50 @@ else
   printf 'SKIP  zsh not installed\n'
 fi
 grep -q 'syntax-highlighting' adapters/zsh/retrocrt.zsh && ok "zsh adapter documents plugin order"
+
+echo
+echo "=== tmux adapter ==="
+if grep -q 'bind-key\|bind -' adapters/tmux/retrocrt.conf; then
+  bad "tmux adapter contains keybinds"
+else
+  ok "tmux adapter is colors only"
+fi
+if grep -Eq '^\s*set(-option)?[[:space:]]+(-[gw]+[[:space:]]+)?-g[[:space:]]+(status-left|status-right|window-status-format|window-status-current-format)[[:space:]]' adapters/tmux/retrocrt.conf; then
+  bad "tmux adapter rewrites status layout"
+else
+  ok "tmux adapter does not rewrite status layout"
+fi
+if command -v tmux >/dev/null 2>&1; then
+  sock=retrocrt-verify
+  tmux -L "$sock" kill-server >/dev/null 2>&1 || true
+  if ! TMUX= tmux -L "$sock" -f "${ROOT}/adapters/tmux/retrocrt.conf" new-session -d -s verify >/dev/null 2>&1; then
+    bad "tmux failed to start with adapter"
+  else
+    tmuxout=$(tmux -L "$sock" show -gv status-style 2>&1) || true
+    case "$tmuxout" in
+      *'#121820'*) ok "tmux status-style uses BACKGROUND_ALT" ;;
+      *) bad "tmux status-style unexpected: ${tmuxout}" ;;
+    esac
+    cur=$(tmux -L "$sock" show -gwv window-status-current-style 2>/dev/null || true)
+    case "$cur" in
+      *'#00d4c8'*) ok "tmux current window is CYAN" ;;
+      *) bad "tmux current window style unexpected: ${cur}" ;;
+    esac
+    mode=$(tmux -L "$sock" show -gwv mode-style 2>/dev/null || true)
+    case "$mode" in
+      *'#1e3a4c'*) ok "tmux copy-mode uses VISUAL_BG" ;;
+      *) bad "tmux mode-style unexpected: ${mode}" ;;
+    esac
+    msg=$(tmux -L "$sock" show -gv message-style 2>/dev/null || true)
+    case "$msg" in
+      *'#ffb020'*) ok "tmux command prompt is AMBER" ;;
+      *) bad "tmux message-style unexpected: ${msg}" ;;
+    esac
+  fi
+  tmux -L "$sock" kill-server >/dev/null 2>&1 || true
+else
+  printf 'SKIP  tmux not installed\n'
+fi
 
 echo
 if [ "$fail" -ne 0 ]; then

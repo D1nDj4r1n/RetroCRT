@@ -1,0 +1,4 @@
+# ~/.tmux.conf fragment — retrocrt
+# Colors only. Keep your prefix, binds, and status formats.
+
+source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
