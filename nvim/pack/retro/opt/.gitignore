@@ -1,0 +1,4 @@
+# Plugins are git checkouts managed by :PackEnsure / :PackUpdate (lua/lib/pack.lua).
+# They are not vendored into this repository, only the list of them is.
+*
+!.gitignore
