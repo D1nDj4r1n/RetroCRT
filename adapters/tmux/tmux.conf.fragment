@@ -1,0 +1,4 @@
+# ~/.tmux.conf fragment — retrocrt
+# Prefix and binds stay yours. Status: battery left, date right.
+
+source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf

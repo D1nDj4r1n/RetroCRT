@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>retrocrt</title>
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --bg-alt: #121820;
+      --fg: #c8d0d8;
+      --dim: #5a6570;
+      --cyan: #00d4c8;
+      --amber: #ffb020;
+      --magenta: #e040a0;
+      --green: #40c070;
+      --red: #e05050;
+      --blue: #4080c0;
+      --visual: #1e3a4c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 15px/1.45 ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    }
+    main { max-width: 920px; margin: 0 auto; padding: 32px 24px 64px; }
+    h1 { color: var(--cyan); font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+    h2 { color: var(--cyan); font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; margin: 36px 0 12px; }
+    p, li { color: var(--fg); }
+    .dim { color: var(--dim); }
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .swatch { background: var(--bg-alt); border: 1px solid #1e3a4c; padding: 10px; }
+    .chip { height: 28px; margin-bottom: 8px; }
+    .name { color: var(--cyan); }
+    .hex { color: var(--dim); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #121820; vertical-align: top; }
+    th { color: var(--dim); font-weight: 500; }
+    .mode { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 24px; }
+    .mode span { padding: 6px 12px; color: var(--bg); }
+    .preview {
+      background: var(--bg-alt);
+      border: 1px solid var(--visual);
+      padding: 16px;
+      white-space: pre;
+    }
+    .c-cyan { color: var(--cyan); }
+    .c-amber { color: var(--amber); }
+    .c-mag { color: var(--magenta); }
+    .c-green { color: var(--green); }
+    .c-red { color: var(--red); }
+    .c-blue { color: var(--blue); }
+    .c-dim { color: var(--dim); }
+    .sel { background: var(--visual); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>retrocrt</h1>
+  <p class="dim">Universal visual system for the workstation. Dark blue-black, cool gray, cyan, amber. Not synthwave.</p>
+
+  <div class="mode">
+    <span style="background:#00d4c8">NORMAL</span>
+    <span style="background:#ffb020">INSERT</span>
+    <span style="background:#e040a0">VISUAL</span>
+  </div>
+
+  <h2>Canonical palette</h2>
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#0a0e14;border:1px solid #5a6570"></div><div class="name">BACKGROUND</div><div class="hex">#0a0e14</div></div>
+    <div class="swatch"><div class="chip" style="background:#121820"></div><div class="name">BACKGROUND_ALT</div><div class="hex">#121820</div></div>
+    <div class="swatch"><div class="chip" style="background:#c8d0d8"></div><div class="name">FOREGROUND</div><div class="hex">#c8d0d8</div></div>
+    <div class="swatch"><div class="chip" style="background:#5a6570"></div><div class="name">DIM</div><div class="hex">#5a6570</div></div>
+    <div class="swatch"><div class="chip" style="background:#00d4c8"></div><div class="name">CYAN</div><div class="hex">#00d4c8</div></div>
+    <div class="swatch"><div class="chip" style="background:#ffb020"></div><div class="name">AMBER</div><div class="hex">#ffb020</div></div>
+    <div class="swatch"><div class="chip" style="background:#e040a0"></div><div class="name">MAGENTA</div><div class="hex">#e040a0</div></div>
+    <div class="swatch"><div class="chip" style="background:#40c070"></div><div class="name">GREEN</div><div class="hex">#40c070</div></div>
+    <div class="swatch"><div class="chip" style="background:#e05050"></div><div class="name">RED</div><div class="hex">#e05050</div></div>
+    <div class="swatch"><div class="chip" style="background:#4080c0"></div><div class="name">BLUE</div><div class="hex">#4080c0</div></div>
+  </div>
+
+  <h2>Syntax sample</h2>
+  <div class="preview"><span class="c-dim">-- comment / metadata</span>
+<span class="c-mag">local</span> <span class="c-cyan">count</span> <span class="c-cyan">=</span> <span class="c-blue">42</span>
+<span class="c-cyan">function</span> <span class="c-green">boot</span>()
+  <span class="c-cyan">if</span> <span class="c-mag">true</span> <span class="c-cyan">then</span>
+    <span class="c-cyan">print</span>(<span class="c-amber">"ready"</span>)
+  <span class="c-cyan">end</span>
+<span class="c-cyan">end</span>
+<span class="sel">visual selection</span>   <span class="c-red">error</span>  <span class="c-green">ok</span>
+</div>
+
+  <h2>Semantic roles</h2>
+  <table>
+    <tr><th>Color</th><th>Role</th></tr>
+    <tr><td class="c-cyan">CYAN</td><td>active, navigation, commands, NORMAL</td></tr>
+    <tr><td class="c-amber">AMBER</td><td>editable, attention, warnings, INSERT, strings</td></tr>
+    <tr><td class="c-mag">MAGENTA</td><td>selection, constants, types, VISUAL</td></tr>
+    <tr><td class="c-green">GREEN</td><td>success, functions, additions</td></tr>
+    <tr><td class="c-red">RED</td><td>error, failure, deletions</td></tr>
+    <tr><td class="c-blue">BLUE</td><td>numbers, informational</td></tr>
+    <tr><td class="c-dim">DIM</td><td>comments, inactive, metadata</td></tr>
+  </table>
+</main>
+</body>
+</html>

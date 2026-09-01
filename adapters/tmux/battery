@@ -1,0 +1,39 @@
+#!/bin/sh
+# retrocrt — tmux battery fragment (Linux sysfs)
+# Prints a tmux style string. No plugins.
+# Healthy GREEN, low AMBER, critical RED. No battery: DIM.
+
+GREEN=#40c070
+AMBER=#ffb020
+RED=#e05050
+DIM=#5a6570
+
+cap=""
+st=""
+for d in /sys/class/power_supply/*; do
+  [ -d "$d" ] || continue
+  t=$(cat "$d/type" 2>/dev/null) || continue
+  [ "$t" = "Battery" ] || continue
+  cap=$(cat "$d/capacity" 2>/dev/null) || cap=""
+  st=$(cat "$d/status" 2>/dev/null) || st=""
+  break
+done
+
+if [ -z "$cap" ]; then
+  printf '#[fg=%s]BAT --' "$DIM"
+  exit 0
+fi
+
+color=$GREEN
+if [ "$cap" -le 15 ] 2>/dev/null; then
+  color=$RED
+elif [ "$cap" -le 30 ] 2>/dev/null; then
+  color=$AMBER
+fi
+
+suffix=""
+case "$st" in
+  Charging) suffix="+" ;;
+esac
+
+printf '#[fg=%s]BAT %s%%%s' "$color" "$cap" "$suffix"

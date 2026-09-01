@@ -1,0 +1,172 @@
+# retrocrt — Yazi adapter
+# Canonical palette: ../../palette
+# Manually maintained. Not a Yazi flavor pack.
+# Directories are CYAN. Files are FOREGROUND. No rainbow icons.
+
+# : Flavor {{{
+[flavor]
+dark = ""
+light = ""
+# : }}}
+
+# : App {{{
+[app]
+overall = { fg = "#c8d0d8", bg = "#0a0e14" }
+# : }}}
+
+# : Manager {{{
+[mgr]
+cwd = { fg = "#00d4c8" }
+
+find_keyword = { fg = "#ffb020", bold = true, underline = true }
+find_position = { fg = "#5a6570" }
+
+symlink_target = { fg = "#4080c0", italic = true }
+
+marker_copied = { fg = "#40c070", bg = "#122018" }
+marker_cut = { fg = "#e05050", bg = "#201212" }
+marker_marked = { fg = "#e040a0", bg = "#1e3a4c" }
+marker_selected = { fg = "#00d4c8", bg = "#1e3a4c" }
+marker_symbol = "│"
+
+count_copied = { fg = "#0a0e14", bg = "#40c070" }
+count_cut = { fg = "#0a0e14", bg = "#e05050" }
+count_selected = { fg = "#0a0e14", bg = "#00d4c8" }
+
+border_symbol = "│"
+border_style = { fg = "#5a6570" }
+
+syntect_theme = ""
+# : }}}
+
+# : Tabs {{{
+[tabs]
+active = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+inactive = { fg = "#5a6570", bg = "#121820" }
+sep_inner = { open = "", close = "" }
+sep_outer = { open = "", close = "" }
+# : }}}
+
+# : Mode {{{
+# CRT status language: NORMAL=CYAN, selection=MAGENTA, unset/pending=AMBER
+[mode]
+normal_main = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+normal_alt = { fg = "#00d4c8", bg = "#121820" }
+select_main = { fg = "#0a0e14", bg = "#e040a0", bold = true }
+select_alt = { fg = "#e040a0", bg = "#121820" }
+unset_main = { fg = "#0a0e14", bg = "#ffb020", bold = true }
+unset_alt = { fg = "#ffb020", bg = "#121820" }
+# : }}}
+
+# : Indicator {{{
+[indicator]
+parent = { fg = "#c8d0d8", bg = "#121820" }
+current = { fg = "#c8d0d8", bg = "#1e3a4c" }
+preview = { underline = true }
+padding = { open = "", close = "" }
+# : }}}
+
+# : Status {{{
+[status]
+overall = { fg = "#c8d0d8", bg = "#121820" }
+sep_left = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+perm_sep = { fg = "#5a6570" }
+perm_type = { fg = "#40c070" }
+perm_read = { fg = "#4080c0" }
+perm_write = { fg = "#e05050" }
+perm_exec = { fg = "#00d4c8" }
+progress_label = { fg = "#c8d0d8", bold = true }
+progress_normal = { fg = "#40c070", bg = "#0a0e14" }
+progress_error = { fg = "#e05050", bg = "#0a0e14" }
+# : }}}
+
+# : Which {{{
+[which]
+border = { fg = "#5a6570" }
+cols = 3
+mask = { bg = "#0a0e14" }
+cand = { fg = "#00d4c8" }
+rest = { fg = "#5a6570" }
+desc = { fg = "#c8d0d8" }
+separator = "  "
+separator_style = { fg = "#5a6570" }
+# : }}}
+
+# : Confirm {{{
+[confirm]
+border = { fg = "#5a6570" }
+title = { fg = "#00d4c8" }
+body = { fg = "#c8d0d8" }
+list = { fg = "#c8d0d8" }
+btn_yes = { fg = "#0a0e14", bg = "#40c070" }
+btn_no = { fg = "#c8d0d8", bg = "#121820" }
+btn_labels = [ " [Y]es ", " (N)o " ]
+# : }}}
+
+# : Spot {{{
+[spot]
+border = { fg = "#5a6570" }
+title = { fg = "#00d4c8" }
+tbl_col = { fg = "#4080c0" }
+tbl_cell = { fg = "#ffb020", reversed = true }
+# : }}}
+
+# : Notify {{{
+[notify]
+title_info = { fg = "#4080c0" }
+title_warn = { fg = "#ffb020" }
+title_error = { fg = "#e05050" }
+# : }}}
+
+# : Pick {{{
+[pick]
+border = { fg = "#5a6570" }
+active = { fg = "#00d4c8", bold = true }
+inactive = { fg = "#c8d0d8" }
+# : }}}
+
+# : Input {{{
+[input]
+border = { fg = "#ffb020" }
+title = { fg = "#c8d0d8" }
+value = { fg = "#c8d0d8" }
+selected = { bg = "#1e3a4c" }
+# : }}}
+
+# : Cmp {{{
+[cmp]
+border = { fg = "#5a6570" }
+active = { fg = "#0a0e14", bg = "#00d4c8" }
+inactive = { fg = "#c8d0d8" }
+# : }}}
+
+# : Tasks {{{
+[tasks]
+border = { fg = "#5a6570" }
+title = { fg = "#00d4c8" }
+hovered = { fg = "#00d4c8", bold = true }
+# : }}}
+
+# : Help {{{
+[help]
+border = { fg = "#5a6570" }
+chord = { fg = "#00d4c8" }
+action = { fg = "#c8d0d8" }
+hovered = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+# : }}}
+
+# : Filetype {{{
+# Restrained roles only. Do not assign a unique color per extension.
+[filetype]
+rules = [
+  { url = "*/", fg = "#00d4c8" },
+  { url = "*", is = "exec", fg = "#40c070" },
+  { url = "*", is = "orphan", fg = "#e05050" },
+  { url = "*", is = "link", fg = "#4080c0" },
+  { mime = "**/image/*", fg = "#ffb020" },
+  { mime = "**/{audio,video}/*", fg = "#e040a0" },
+  { mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#5a6570" },
+  { mime = "vfs/{absent,stale}", fg = "#5a6570" },
+]
+# : }}}
