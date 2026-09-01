@@ -1,0 +1,3 @@
+# Visual adapter only. Keep font, padding, opacity, and window preferences here
+# as user-specific settings; retrocrt does not prescribe them.
+theme = retrocrt

@@ -1,0 +1,30 @@
+# retrocrt canonical palette
+# Keep this file to simple NAME=#rrggbb entries: zsh sources it directly,
+# while the Vim and Neovim adapters parse the same values.
+
+BACKGROUND=#0a0e14
+BACKGROUND_ALT=#121820
+FOREGROUND=#c8d0d8
+DIM=#5a6570
+
+CYAN=#00d4c8
+AMBER=#ffb020
+MAGENTA=#e040a0
+GREEN=#40c070
+RED=#e05050
+BLUE=#4080c0
+
+# Approved supporting colors.
+VISUAL=#1e3a4c
+DIFF_ADD_BG=#122018
+DIFF_DELETE_BG=#201212
+DIFF_CHANGE_BG=#201a10
+
+# Conservative ANSI bright variants.
+BRIGHT_RED=#f06a6a
+BRIGHT_GREEN=#58d088
+BRIGHT_AMBER=#ffc04a
+BRIGHT_BLUE=#6098d0
+BRIGHT_MAGENTA=#ec62b4
+BRIGHT_CYAN=#38e0d6
+BRIGHT_FOREGROUND=#e0e6ec

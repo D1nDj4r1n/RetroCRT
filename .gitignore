@@ -1,0 +1,2 @@
+.config/nvim/pack/retro/start/*
+!.config/nvim/pack/retro/start/.gitkeep

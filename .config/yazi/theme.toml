@@ -1,0 +1,140 @@
+#:schema https://yazi-rs.github.io/schemas/theme.json
+# Static adapter: Yazi cannot consume ~/.config/retrocrt/palette directly.
+
+[app]
+overall = { fg = "#c8d0d8", bg = "#0a0e14" }
+
+[mgr]
+cwd = { fg = "#00d4c8", bold = true }
+find_keyword = { fg = "#0a0e14", bg = "#ffb020", bold = true }
+find_position = { fg = "#4080c0", bg = "#121820" }
+symlink_target = { fg = "#4080c0", italic = true }
+marker_copied = { fg = "#40c070", bg = "#40c070" }
+marker_cut = { fg = "#e05050", bg = "#e05050" }
+marker_marked = { fg = "#e040a0", bg = "#e040a0" }
+marker_selected = { fg = "#e040a0", bg = "#e040a0" }
+marker_symbol = "│"
+count_copied = { fg = "#0a0e14", bg = "#40c070" }
+count_cut = { fg = "#0a0e14", bg = "#e05050" }
+count_selected = { fg = "#0a0e14", bg = "#e040a0" }
+border_symbol = "│"
+border_style = { fg = "#5a6570" }
+syntect_theme = ""
+
+[tabs]
+active = { fg = "#00d4c8", bg = "#121820", bold = true }
+inactive = { fg = "#5a6570", bg = "#121820" }
+sep_inner = { open = "", close = "│" }
+sep_outer = { open = "", close = "" }
+
+[mode]
+normal_main = { fg = "#0a0e14", bg = "#00d4c8", bold = true }
+normal_alt = { fg = "#00d4c8", bg = "#121820" }
+select_main = { fg = "#0a0e14", bg = "#e040a0", bold = true }
+select_alt = { fg = "#e040a0", bg = "#121820" }
+unset_main = { fg = "#0a0e14", bg = "#ffb020", bold = true }
+unset_alt = { fg = "#ffb020", bg = "#121820" }
+
+[indicator]
+parent = { fg = "#5a6570", bg = "#121820" }
+current = { fg = "#00d4c8", bg = "#121820", bold = true }
+preview = { fg = "#e040a0", bg = "#1e3a4c" }
+padding = { open = "", close = "" }
+
+[status]
+overall = { fg = "#c8d0d8", bg = "#121820" }
+sep_left = { open = "", close = "│" }
+sep_right = { open = "│", close = "" }
+perm_sep = { fg = "#5a6570" }
+perm_type = { fg = "#4080c0" }
+perm_read = { fg = "#c8d0d8" }
+perm_write = { fg = "#ffb020" }
+perm_exec = { fg = "#40c070" }
+progress_label = { fg = "#c8d0d8", bold = true }
+progress_normal = { fg = "#40c070", bg = "#121820" }
+progress_error = { fg = "#e05050", bg = "#121820" }
+
+[which]
+border = { fg = "#5a6570" }
+cols = 3
+mask = { bg = "#0a0e14" }
+cand = { fg = "#00d4c8" }
+rest = { fg = "#5a6570" }
+desc = { fg = "#c8d0d8" }
+separator = " │ "
+separator_style = { fg = "#5a6570" }
+
+[confirm]
+border = { fg = "#ffb020" }
+title = { fg = "#ffb020", bold = true }
+body = { fg = "#c8d0d8" }
+list = { fg = "#c8d0d8" }
+btn_yes = { fg = "#0a0e14", bg = "#40c070", bold = true }
+btn_no = { fg = "#0a0e14", bg = "#e05050", bold = true }
+btn_labels = [ " yes ", " no " ]
+
+[spot]
+border = { fg = "#4080c0" }
+title = { fg = "#00d4c8", bold = true }
+tbl_col = { fg = "#4080c0" }
+tbl_cell = { fg = "#c8d0d8", bg = "#121820" }
+
+[notify]
+title_info = { fg = "#4080c0" }
+title_warn = { fg = "#ffb020" }
+title_error = { fg = "#e05050" }
+icon_info = "i"
+icon_warn = "!"
+icon_error = "x"
+
+[pick]
+border = { fg = "#4080c0" }
+active = { fg = "#00d4c8", bg = "#121820", bold = true }
+inactive = { fg = "#5a6570" }
+
+[input]
+border = { fg = "#4080c0" }
+title = { fg = "#00d4c8" }
+value = { fg = "#c8d0d8" }
+selected = { fg = "#c8d0d8", bg = "#1e3a4c" }
+
+[cmp]
+border = { fg = "#4080c0" }
+active = { fg = "#0a0e14", bg = "#00d4c8" }
+inactive = { fg = "#5a6570" }
+icon_file = "f"
+icon_folder = "d"
+icon_command = ">"
+
+[tasks]
+border = { fg = "#4080c0" }
+title = { fg = "#00d4c8", bold = true }
+hovered = { fg = "#c8d0d8", bg = "#1e3a4c" }
+
+[help]
+border = { fg = "#4080c0" }
+chord = { fg = "#00d4c8" }
+action = { fg = "#c8d0d8" }
+hovered = { fg = "#c8d0d8", bg = "#1e3a4c", bold = true }
+
+[filetype]
+rules = [
+  { url = "*", is = "orphan", fg = "#e05050" },
+  { url = "*", is = "exec", fg = "#40c070" },
+  { url = "*/", fg = "#00d4c8" },
+  { url = "*", fg = "#c8d0d8" },
+]
+
+[icon]
+globs = []
+dirs = []
+files = []
+exts = []
+conds = [
+  { if = "orphan", text = "!", fg = "#e05050" },
+  { if = "link", text = "l", fg = "#4080c0" },
+  { if = "dir & hovered", text = "d", fg = "#00d4c8" },
+  { if = "dir", text = "d", fg = "#00d4c8" },
+  { if = "exec", text = "x", fg = "#40c070" },
+  { if = "!dir", text = "f", fg = "#5a6570" },
+]
