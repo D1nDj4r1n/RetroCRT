@@ -1,0 +1,18 @@
+# retrocrt — Sway client colors
+# Canonical palette: ../../palette
+#
+# Include from ~/.config/sway/config:
+#   include ~/.config/retrocrt/adapters/sway/colors
+#
+# Colors only. Does not set binds, outputs, input, or gaps.
+
+# class                 border    backgr.   text      indicator child_border
+client.focused          #00d4c8   #121820   #c8d0d8   #00d4c8   #00d4c8
+client.focused_inactive #5a6570   #121820   #5a6570   #5a6570   #5a6570
+client.unfocused        #121820   #0a0e14   #5a6570   #121820   #121820
+client.urgent           #e05050   #201212   #c8d0d8   #e05050   #e05050
+client.placeholder      #5a6570   #121820   #c8d0d8   #5a6570   #5a6570
+client.focused_tab_title #00d4c8  #121820   #c8d0d8
+
+# MAGENTA (#e040a0) has no window-class slot (no selection chrome).
+# GREEN (#40c070) is used by swaylock (cleared / success), not here.

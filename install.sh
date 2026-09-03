@@ -18,10 +18,12 @@ install.sh [options]
 
 Installs visual adapters only:
   Vim colorscheme, Neovim colorscheme + oil highlights,
-  Yazi theme.toml, Ghostty theme, zsh color fragment, tmux styles.
+  Yazi theme.toml, Ghostty theme, zsh color fragment, tmux styles,
+  mako, swaylock, swaynag. Sway colors are included, not a full sway config.
 
 Does not change: fonts, Ghostty padding/opacity, bindkey,
-Oh My Zsh plugin lists, the body of ~/.p10k.zsh, or tmux keybinds.
+Oh My Zsh plugin lists, the body of ~/.p10k.zsh, tmux keybinds,
+or Sway keybinds/outputs.
 EOF
 }
 
@@ -118,6 +120,11 @@ link_or_copy "$DEST/adapters/yazi/theme.toml" "$HOME/.config/yazi/theme.toml"
 run mkdir -p "$HOME/.config/ghostty/themes"
 link_or_copy "$DEST/adapters/ghostty/retrocrt" "$HOME/.config/ghostty/themes/retrocrt"
 
+# mako / swaylock / swaynag (color configs only; does not replace Sway keybinds)
+link_or_copy "$DEST/adapters/mako/config" "$HOME/.config/mako/config"
+link_or_copy "$DEST/adapters/swaylock/config" "$HOME/.config/swaylock/config"
+link_or_copy "$DEST/adapters/swaynag/config" "$HOME/.config/swaynag/config"
+
 echo
 echo "Installed visual adapters."
 echo
@@ -137,5 +144,10 @@ echo "    source ${DEST}/adapters/zsh/retrocrt.zsh"
 echo
 echo "  tmux (~/.tmux.conf):"
 echo "    source-file ${DEST}/adapters/tmux/retrocrt.conf"
+echo
+echo "  sway (~/.config/sway/config):"
+echo "    include ${DEST}/adapters/sway/colors"
+echo "    # existing bar: copy adapters/sway/bar-colors into colors { }"
+echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
 echo
 echo "Do not move syntax-highlighting earlier than last among plugins."

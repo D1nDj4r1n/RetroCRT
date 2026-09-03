@@ -22,6 +22,10 @@ Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, s
                       zsh
                        │
                   Powerlevel10k
+                       │
+                     Sway
+                       │
+          mako · swaybar · swaylock · swaynag
 ```
 
 ## NAME
@@ -118,6 +122,21 @@ tmux mapping:
 | battery critical | RED |
 | date | BLUE |
 
+Sway mapping:
+
+| Sway | Role |
+| --- | --- |
+| focused window / workspace | NORMAL / CYAN |
+| binding mode | INSERT / AMBER |
+| urgent | RED |
+| unfocused | DIM |
+| mako normal | CYAN border |
+| mako critical | RED |
+| swaylock idle/typing ring | CYAN |
+| swaylock verifying / caps | AMBER |
+| swaylock wrong | RED |
+| swaylock cleared | GREEN |
+
 ## APPLICATION ADAPTERS
 
 | Application | Adapter | Role |
@@ -129,6 +148,11 @@ tmux mapping:
 | Ghostty | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
+| Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
+| swaybar | `adapters/sway/bar-colors` | workspaces + binding mode |
+| mako | `adapters/mako/config` | notifications |
+| swaylock | `adapters/swaylock/config` | lock screen |
+| swaynag | `adapters/swaynag/config` | nagbar |
 
 Vim and Neovim stay distinct. Yazi and oil.nvim stay distinct.
 
@@ -148,6 +172,8 @@ If the application cannot use the full palette, map the closest roles and note t
 
 Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
 
+Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unused there. waybar / wofi / fuzzel are not Sway's own programs; add them later as separate adapters.
+
 ## ANTI-DRIFT
 
 - Change HEX in `palette` first, then adapters.
@@ -155,7 +181,7 @@ Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assign
 - Do not introduce synthwave / vaporwave / RGB gaming palettes.
 - Do not recolor every file type just because a UI allows it.
 - Do not replace `pack/retro` or any hand-managed Neovim packs with Lazy/Packer/vim-plug.
-- Do not put fonts, padding, opacity, p10k layout, or tmux keybinds into adapters.
+- Do not put fonts, padding, opacity, p10k layout, tmux keybinds, or Sway keybinds into adapters.
 
 ## INSTALL
 
@@ -192,6 +218,15 @@ source ~/.config/retrocrt/adapters/zsh/retrocrt.zsh
 source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
 ```
 
+```text
+# ~/.config/sway/config
+include ~/.config/retrocrt/adapters/sway/colors
+# existing bar: copy adapters/sway/bar-colors into colors { }
+# no bar yet: include ~/.config/retrocrt/adapters/sway/bar
+```
+
+mako, swaylock, and swaynag load `~/.config/<app>/config` after `./install.sh`.
+
 Required zsh order:
 
 ```text
@@ -206,7 +241,7 @@ zsh-syntax-highlighting     LAST among plugins
 source retrocrt.zsh         color overlay
 ```
 
-`install.sh` does not rewrite `~/.p10k.zsh`, Ghostty font/padding/opacity, editor keymaps, or tmux keybinds.
+`install.sh` does not rewrite `~/.p10k.zsh`, Ghostty font/padding/opacity, editor keymaps, tmux keybinds, or Sway keybinds/outputs.
 
 ## VALIDATE
 
@@ -223,6 +258,9 @@ yazi
 # Ghostty: theme = retrocrt
 # zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion
 # tmux: battery left, date right; copy-mode MAGENTA
+# sway: include adapters/sway/colors; reload
+# mako: makoctl reload
+# swaylock / swaynag: configs in ~/.config/
 ```
 
 ---
@@ -282,6 +320,7 @@ None in-repo. Possible on the workstation: an existing `~/.vim/colors/retrocrt.v
 - Oh My Zsh plugin list and `bindkey -v`
 - Full Vimrc / Neovim IDE (LSP, language packs, keymaps)
 - tmux prefix, keybinds, and plugins
+- Sway keybinds, outputs, input, gaps, and wallpaper image
 - `pack/retro` plugin manager
 - oil.nvim and Yazi as separate tools (neither removed)
 
