@@ -1,0 +1,21 @@
+# retrocrt — swaybar colors
+# Canonical palette: ../../palette
+#
+# Paste inside an existing bar { colors { ... } } block.
+# Do not include this file at the top level.
+
+background #0a0e14
+statusline #c8d0d8
+separator #5a6570
+focused_background #0a0e14
+focused_statusline #c8d0d8
+focused_separator #5a6570
+
+# focused = NORMAL / CYAN
+focused_workspace  #00d4c8 #00d4c8 #0a0e14
+# visible on another output
+active_workspace   #5a6570 #121820 #00d4c8
+inactive_workspace #121820 #121820 #5a6570
+urgent_workspace   #e05050 #201212 #c8d0d8
+# binding mode = pending / INSERT = AMBER
+binding_mode       #ffb020 #ffb020 #0a0e14

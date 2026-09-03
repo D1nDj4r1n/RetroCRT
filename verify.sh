@@ -70,6 +70,22 @@ need_hex adapters/ghostty/retrocrt "$BRIGHT_RED" "$BRIGHT_CYAN" "$VISUAL_BG" && 
 if need_hex adapters/tmux/retrocrt.conf $BACKGROUND $BACKGROUND_ALT $FOREGROUND $DIM $CYAN $AMBER $MAGENTA $RED $BLUE $VISUAL_BG; then
   ok "adapters/tmux/retrocrt.conf canonical colors"
 fi
+# Sway clients: MAGENTA unused (no selection chrome). GREEN is on swaylock.
+if need_hex adapters/sway/colors $BACKGROUND $BACKGROUND_ALT $FOREGROUND $DIM $CYAN $RED $DIFF_DELETE_BG; then
+  ok "adapters/sway/colors canonical colors"
+fi
+if need_hex adapters/sway/bar-colors $BACKGROUND $BACKGROUND_ALT $FOREGROUND $DIM $CYAN $AMBER $RED $DIFF_DELETE_BG; then
+  ok "adapters/sway/bar-colors canonical colors"
+fi
+if need_hex adapters/mako/config $BACKGROUND_ALT $FOREGROUND $DIM $CYAN $RED $DIFF_DELETE_BG; then
+  ok "adapters/mako/config canonical colors"
+fi
+if need_hex adapters/swaylock/config $BACKGROUND $BACKGROUND_ALT $FOREGROUND $DIM $CYAN $AMBER $GREEN $RED $DIFF_ADD_BG $DIFF_DELETE_BG $DIFF_CHANGE_BG; then
+  ok "adapters/swaylock/config canonical colors"
+fi
+if need_hex adapters/swaynag/config $BACKGROUND $BACKGROUND_ALT $FOREGROUND $CYAN; then
+  ok "adapters/swaynag/config canonical colors"
+fi
 
 echo
 echo "=== vim colorscheme ==="
@@ -211,6 +227,34 @@ if command -v tmux >/dev/null 2>&1; then
   tmux -L "$sock" kill-server >/dev/null 2>&1 || true
 else
   printf 'SKIP  tmux not installed\n'
+fi
+
+echo
+echo "=== sway / mako ==="
+if grep -q 'bindsym\|bindcode\|exec ' adapters/sway/colors adapters/sway/bar adapters/sway/bar-colors; then
+  bad "sway adapter contains binds or exec"
+else
+  ok "sway adapter is colors only"
+fi
+grep -q 'client.focused' adapters/sway/colors && ok "sway client.focused present"
+grep -q 'binding_mode' adapters/sway/bar-colors && ok "swaybar binding_mode is AMBER"
+if grep -q 'font=' adapters/mako/config adapters/swaylock/config adapters/swaynag/config; then
+  bad "mako/swaylock/swaynag adapter sets font"
+else
+  ok "mako/swaylock/swaynag are colors only"
+fi
+grep -q 'urgency=critical' adapters/mako/config && ok "mako critical urgency present"
+grep -q 'ring-color=#00d4c8' adapters/swaylock/config && ok "swaylock ring is CYAN"
+grep -q 'border=00d4c8' adapters/swaynag/config && ok "swaynag border is CYAN"
+if command -v sway >/dev/null 2>&1; then
+  printf 'SKIP  sway --validate needs a full session config\n'
+else
+  printf 'SKIP  sway not installed\n'
+fi
+if command -v mako >/dev/null 2>&1; then
+  ok "mako binary present"
+else
+  printf 'SKIP  mako not installed (config is static)\n'
 fi
 
 echo

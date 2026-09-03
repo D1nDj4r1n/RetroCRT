@@ -1,0 +1,14 @@
+# retrocrt — swaynag adapter
+# Canonical palette: ../../palette
+# BACKGROUND #0a0e14  BACKGROUND_ALT #121820  FOREGROUND #c8d0d8  CYAN #00d4c8
+# Install to ~/.config/swaynag/config
+# Colors only. Does not set font, edge, or padding.
+# Values are RRGGBB (swaynag does not use a leading #).
+
+background=0a0e14
+text=c8d0d8
+border=00d4c8
+border-bottom=00d4c8
+button-background=121820
+button-text=c8d0d8
+details-background=121820

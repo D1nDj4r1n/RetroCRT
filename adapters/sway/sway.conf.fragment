@@ -1,0 +1,11 @@
+# ~/.config/sway/config fragment — retrocrt
+# Colors only. Keep binds, outputs, input, and gaps.
+
+include ~/.config/retrocrt/adapters/sway/colors
+
+# Wallpaper as a solid surface (optional; leave commented if you use an image):
+# output * bg #0a0e14 solid_color
+
+# If you already have a bar { } block, copy adapters/sway/bar-colors
+# into its colors { } section. Otherwise you may:
+# include ~/.config/retrocrt/adapters/sway/bar
