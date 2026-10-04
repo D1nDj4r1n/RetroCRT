@@ -1,0 +1,38 @@
+# retrocrt — foot adapter
+# Canonical palette: ../../palette
+# Install to ~/.config/foot/themes/retrocrt
+# Enable with one line at the top of ~/.config/foot/foot.ini:
+#   include=~/.config/foot/themes/retrocrt
+# Colors only. Do not put font, pad, alpha, or window behavior in this file.
+# foot takes RRGGBB without a leading #.
+# foot >= 1.24 prefers [colors-dark] and keeps [colors] as a deprecated alias;
+# [colors] is used so older foot (FreeBSD pkg) also loads this file.
+
+[colors]
+background=0a0e14
+foreground=c8d0d8
+# BACKGROUND_ALT (#121820) has no foot slot; one terminal surface only.
+# cursor = <text> <cursor>
+cursor=0a0e14 00d4c8
+selection-background=1e3a4c
+selection-foreground=c8d0d8
+
+# ANSI 0-7
+regular0=0a0e14
+regular1=e05050
+regular2=40c070
+regular3=ffb020
+regular4=4080c0
+regular5=e040a0
+regular6=00d4c8
+regular7=c8d0d8
+
+# ANSI 8-15 (derived brights, same hues)
+bright0=5a6570
+bright1=e67373
+bright2=66cd8d
+bright3=ffc04d
+bright4=6699cd
+bright5=e666b3
+bright6=33ddd3
+bright7=d8e0e8

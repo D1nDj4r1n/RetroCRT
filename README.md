@@ -15,7 +15,7 @@ Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, s
        │               │               │
        │            oil.nvim           │
        │                               │
-       └──────────── Ghostty ──────────┘
+       └─────── Ghostty · foot ────────┘
                        │
                       tmux
                        │
@@ -159,6 +159,7 @@ HikaruWM mapping:
 | oil.nvim | groups in the Neovim adapter | in-editor explorer |
 | Yazi | `adapters/yazi/theme.toml` | terminal file manager |
 | Ghostty | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
+| foot | `adapters/foot/retrocrt` | terminal ANSI/theme (Hikaru's terminal; `include=` file) |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 | Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
@@ -185,6 +186,8 @@ Do not download a random marketplace theme.
 
 If the application cannot use the full palette, map the closest roles and note the gap.
 
+Known deviation: foot, like Ghostty, has a single background; `BACKGROUND_ALT` is unused and selection uses `VISUAL_BG`. The file uses `[colors]` (deprecated alias of `[colors-dark]` in foot >= 1.24) so older foot loads it too.
+
 Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
 
 Known deviation: Hikaru has one `color-urgent` key for both urgent views and non-NORMAL modes (resize), so it is AMBER, not RED as in Sway. Hikaru draws no bar or titlebar and `color-*` accepts only `#rrggbb`. A personal `~/.config/mako/config` replaces Hikaru's shipped mako layout entirely; the retrocrt mako adapter is colors only, so re-add font/size/anchor keys if needed. waylock has no config file, so its flags live in `hikaru-lock`; the adapter documents them but `install.sh` does not edit that script.
@@ -205,8 +208,11 @@ Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unus
 From this repository on the workstation:
 
 ```sh
-./install.sh
+./install.sh                 # adapters only; --dry-run shows actions
+./install.sh --hikaru-conf   # also set color-* in ~/.config/hikaru/hikaru.conf (backup kept)
 ```
+
+Works on Linux and FreeBSD (POSIX sh, base utilities, no package installs). On FreeBSD the tmux battery segment reads `sysctl hw.acpi.battery.*`. Hikaru's own CI covers FreeBSD 14.3 and 15.0; retrocrt installs color files only and has not been run on 15.1 hardware or a VM.
 
 Then add, if missing:
 
