@@ -15,7 +15,7 @@ Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, s
        │               │               │
        │            oil.nvim           │
        │                               │
-       └──────────── Ghostty ──────────┘
+       └─────── Ghostty · foot ────────┘
                        │
                       tmux
                        │
@@ -159,6 +159,7 @@ HikaruWM mapping:
 | oil.nvim | groups in the Neovim adapter | in-editor explorer |
 | Yazi | `adapters/yazi/theme.toml` | terminal file manager |
 | Ghostty | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
+| foot | `adapters/foot/retrocrt` | terminal ANSI/theme (Hikaru's terminal; `include=` file) |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 | Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
@@ -184,6 +185,8 @@ How a new application should consume retrocrt:
 Do not download a random marketplace theme.
 
 If the application cannot use the full palette, map the closest roles and note the gap.
+
+Known deviation: foot, like Ghostty, has a single background; `BACKGROUND_ALT` is unused and selection uses `VISUAL_BG`. The file uses `[colors]` (deprecated alias of `[colors-dark]` in foot >= 1.24) so older foot loads it too.
 
 Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
 

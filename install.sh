@@ -20,7 +20,7 @@ install.sh [options]
 
 Installs visual adapters only:
   Vim colorscheme, Neovim colorscheme + oil highlights,
-  Yazi theme.toml, Ghostty theme, zsh color fragment, tmux styles,
+  Yazi theme.toml, Ghostty theme, foot theme, zsh color fragment, tmux styles,
   mako, swaylock, swaynag, HikaruWM colors. Sway colors are included,
   not a full sway config.
 
@@ -164,6 +164,10 @@ link_or_copy "$DEST/adapters/yazi/theme.toml" "$HOME/.config/yazi/theme.toml"
 run mkdir -p "$HOME/.config/ghostty/themes"
 link_or_copy "$DEST/adapters/ghostty/retrocrt" "$HOME/.config/ghostty/themes/retrocrt"
 
+# foot adapter (theme file only; does not edit font/pad/alpha)
+run mkdir -p "$HOME/.config/foot/themes"
+link_or_copy "$DEST/adapters/foot/retrocrt" "$HOME/.config/foot/themes/retrocrt"
+
 # mako / swaylock / swaynag (color configs only; does not replace Sway keybinds)
 link_or_copy "$DEST/adapters/mako/config" "$HOME/.config/mako/config"
 link_or_copy "$DEST/adapters/swaylock/config" "$HOME/.config/swaylock/config"
@@ -189,6 +193,9 @@ echo "    vim.cmd.colorscheme('retrocrt')"
 echo
 echo "  ghostty (~/.config/ghostty/config):"
 echo "    theme = retrocrt"
+echo
+echo "  foot (~/.config/foot/foot.ini, top of file):"
+echo "    include=~/.config/foot/themes/retrocrt"
 echo
 echo "  zsh (~/.zshrc) AFTER oh-my-zsh, p10k, and syntax-highlighting:"
 echo "    source ${DEST}/adapters/zsh/retrocrt.zsh"

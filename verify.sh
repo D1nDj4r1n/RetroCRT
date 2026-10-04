@@ -147,6 +147,31 @@ else
 fi
 
 echo
+echo "=== foot theme ==="
+# foot takes RRGGBB without '#'; compare against the palette with it stripped.
+foot_ok=1
+for hex in $BACKGROUND $FOREGROUND $DIM $CYAN $AMBER $MAGENTA $GREEN $RED $BLUE $VISUAL_BG \
+           $BRIGHT_RED $BRIGHT_GREEN $BRIGHT_YELLOW $BRIGHT_BLUE $BRIGHT_MAGENTA $BRIGHT_CYAN $BRIGHT_WHITE; do
+  if ! grep -Fq "=${hex#\#}" adapters/foot/retrocrt && ! grep -Fq " ${hex#\#}" adapters/foot/retrocrt; then
+    bad "adapters/foot/retrocrt missing ${hex#\#}"
+    foot_ok=0
+  fi
+done
+[ "$foot_ok" -eq 1 ] && ok "adapters/foot/retrocrt canonical colors"
+grep -q '^regular6=00d4c8$' adapters/foot/retrocrt && ok "foot cyan ANSI"
+grep -q '^background=0a0e14$' adapters/foot/retrocrt && ok "foot background"
+if grep -Eq '^(font|pad|alpha|term|shell|dpi-aware)' adapters/foot/retrocrt; then
+  bad "foot adapter contains font/pad/alpha"
+else
+  ok "foot adapter is colors only"
+fi
+if grep -v '^[[:space:]]*#' adapters/foot/retrocrt | grep -q '#'; then
+  bad "foot colors must not use a leading #"
+else
+  ok "foot colors are RRGGBB"
+fi
+
+echo
 echo "=== zsh adapter ==="
 if command -v zsh >/dev/null 2>&1; then
   zsh -f -c "source '${ROOT}/adapters/zsh/retrocrt.zsh' && [[ \$CYAN == '#00d4c8' && \$ZSH_HIGHLIGHT_STYLES[command] == fg=#00d4c8 ]]" \
