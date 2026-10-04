@@ -205,8 +205,11 @@ Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unus
 From this repository on the workstation:
 
 ```sh
-./install.sh
+./install.sh                 # adapters only; --dry-run shows actions
+./install.sh --hikaru-conf   # also set color-* in ~/.config/hikaru/hikaru.conf (backup kept)
 ```
+
+Works on Linux and FreeBSD (POSIX sh, base utilities, no package installs). On FreeBSD the tmux battery segment reads `sysctl hw.acpi.battery.*`. Hikaru's own CI covers FreeBSD 14.3 and 15.0; retrocrt installs color files only and has not been run on 15.1 hardware or a VM.
 
 Then add, if missing:
 

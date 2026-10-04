@@ -174,7 +174,7 @@ if grep -q '%Y-%m-%d' adapters/tmux/retrocrt.conf; then
 else
   bad "tmux status-right missing date"
 fi
-if grep -Eq '^\s*set(-option)?[[:space:]]+(-[gw]+[[:space:]]+)?-g[[:space:]]+(window-status-format|window-status-current-format)[[:space:]]' adapters/tmux/retrocrt.conf; then
+if grep -Eq '^[[:space:]]*set(-option)?[[:space:]]+(-[gw]+[[:space:]]+)?-g[[:space:]]+(window-status-format|window-status-current-format)[[:space:]]' adapters/tmux/retrocrt.conf; then
   bad "tmux adapter rewrites window-status-format"
 else
   ok "tmux adapter does not rewrite window-status-format"
