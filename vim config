@@ -1,0 +1,127 @@
+" === fundament ===
+set nocompatible
+filetype plugin indent on
+syntax on
+
+set encoding=utf-8
+set number
+set relativenumber
+set cursorline
+set showcmd
+set wildmenu
+set wildmode=longest:full,full
+
+" === wcięcia ===
+set expandtab
+set shiftwidth=4
+set tabstop=4
+set softtabstop=4
+set autoindent
+set smartindent
+
+set wrap
+set linebreak
+set scrolloff=5
+
+" === szukaj ===
+set ignorecase
+set smartcase
+set incsearch
+set hlsearch
+
+" === undo ===
+set undofile
+set undodir=~/.vim/undo
+set noswapfile
+set nobackup
+
+" === terminal / schowek ===
+set termguicolors
+set clipboard=unnamedplus
+colorscheme retrocrt
+
+" === klawisze ===
+let mapleader = "\<Space>"
+let maplocalleader = "\\"
+
+nnoremap <Space> <Nop>
+vnoremap <Space> <Nop>
+
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+nnoremap <leader>h :nohlsearch<CR>
+nnoremap <leader>e :Lexplore<CR>
+
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" === netrw ===
+let g:netrw_banner = 0
+let g:netrw_liststyle = 3
+let g:netrw_browse_split = 4
+let g:netrw_winsize = 25
+
+" === statusline CRT ===
+set laststatus=2
+set noshowmode
+
+function! RetroMode()
+  let l:m = mode()
+  if l:m ==# 'n'
+    return ' NORMAL '
+  elseif l:m ==# 'i'
+    return ' INSERT '
+  elseif l:m ==# 'v' || l:m ==# 'V' || l:m ==# "\<C-v>"
+    return ' VISUAL '
+  elseif l:m ==# 'R'
+    return ' REPLACE '
+  elseif l:m ==# 'c'
+    return ' CMD '
+  else
+    return ' ' . l:m . ' '
+  endif
+endfunction
+
+function! RetroModeHighlight()
+  let l:m = mode()
+  if l:m ==# 'n'
+    hi! RetroMode guifg=#0a0e14 guibg=#00d4c8 ctermfg=233 ctermbg=44 cterm=bold gui=bold
+  elseif l:m ==# 'i'
+    hi! RetroMode guifg=#0a0e14 guibg=#ffb020 ctermfg=233 ctermbg=214 cterm=bold gui=bold
+  elseif l:m ==# 'v' || l:m ==# 'V' || l:m ==# "\<C-v>"
+    hi! RetroMode guifg=#0a0e14 guibg=#e040a0 ctermfg=233 ctermbg=169 cterm=bold gui=bold
+  elseif l:m ==# 'R'
+    hi! RetroMode guifg=#0a0e14 guibg=#e05050 ctermfg=233 ctermbg=167 cterm=bold gui=bold
+  else
+    hi! RetroMode guifg=#0a0e14 guibg=#4080c0 ctermfg=233 ctermbg=67 cterm=bold gui=bold
+  endif
+  return ''
+endfunction
+
+hi RetroSep   guifg=#00d4c8 guibg=#121820 ctermfg=44  ctermbg=234
+hi RetroInfo  guifg=#c8d0d8 guibg=#121820 ctermfg=251 ctermbg=234
+hi RetroDim   guifg=#5a6570 guibg=#121820 ctermfg=241 ctermbg=234
+hi RetroRight guifg=#0a0e14 guibg=#00d4c8 ctermfg=233 ctermbg=44 cterm=bold gui=bold
+
+set statusline=
+set statusline+=%{RetroModeHighlight()}
+set statusline+=%#RetroMode#%{RetroMode()}
+set statusline+=%#RetroSep#\ │\
+set statusline+=%#RetroInfo#%f
+set statusline+=%#RetroDim#\ %m%r
+set statusline+=%#RetroSep#\ │\
+set statusline+=%#RetroDim#%y
+set statusline+=%#RetroSep#\ │\
+set statusline+=%#RetroDim#%{&fileencoding!=''?&fileencoding:&encoding}
+set statusline+=%=
+set statusline+=%#RetroSep#\ │\
+set statusline+=%#RetroInfo#%p%%\ %l:%c\
+set statusline+=%#RetroRight#\ CRT\
+
+augroup RetroStatus
+  autocmd!
+  autocmd ModeChanged * redrawstatus
+  autocmd VimEnter,ColorScheme * call RetroModeHighlight()
+augroup END
