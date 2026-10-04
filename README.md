@@ -23,7 +23,7 @@ Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, s
                        │
                   Powerlevel10k
                        │
-                     Sway
+                     Sway · HikaruWM
                        │
           mako · swaybar · swaylock · swaynag
 ```
@@ -137,6 +137,19 @@ Sway mapping:
 | swaylock wrong | RED |
 | swaylock cleared | GREEN |
 
+HikaruWM mapping:
+
+| Hikaru key | Role |
+| --- | --- |
+| `color-background` | BACKGROUND |
+| `color-focused` | NORMAL / CYAN |
+| `color-inactive` (view on an unfocused output) | DIM |
+| `color-unfocused` (unfocused view, focused output) | BACKGROUND_ALT |
+| `color-urgent` (urgent view, and focused view in a non-NORMAL mode) | INSERT / AMBER |
+| mako | shared Sway/mako adapter (CYAN border, RED critical) |
+| waylock idle / typing | BACKGROUND / CYAN |
+| waylock wrong | RED |
+
 ## APPLICATION ADAPTERS
 
 | Application | Adapter | Role |
@@ -153,6 +166,8 @@ Sway mapping:
 | mako | `adapters/mako/config` | notifications |
 | swaylock | `adapters/swaylock/config` | lock screen |
 | swaynag | `adapters/swaynag/config` | nagbar |
+| HikaruWM | `adapters/hikaru/hikaru.conf.fragment` | `color-*` window border keys |
+| waylock (Hikaru) | `adapters/hikaru/hikaru-lock.args` | lock screen flags |
 
 Vim and Neovim stay distinct. Yazi and oil.nvim stay distinct.
 
@@ -171,6 +186,8 @@ Do not download a random marketplace theme.
 If the application cannot use the full palette, map the closest roles and note the gap.
 
 Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
+
+Known deviation: Hikaru has one `color-urgent` key for both urgent views and non-NORMAL modes (resize), so it is AMBER, not RED as in Sway. Hikaru draws no bar or titlebar and `color-*` accepts only `#rrggbb`. A personal `~/.config/mako/config` replaces Hikaru's shipped mako layout entirely; the retrocrt mako adapter is colors only, so re-add font/size/anchor keys if needed. waylock has no config file, so its flags live in `hikaru-lock`; the adapter documents them but `install.sh` does not edit that script.
 
 Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unused there. waybar / wofi / fuzzel are not Sway's own programs; add them later as separate adapters.
 

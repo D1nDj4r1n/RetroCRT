@@ -258,6 +258,43 @@ else
 fi
 
 echo
+echo "=== hikaru ==="
+HC=adapters/hikaru/hikaru.conf.fragment
+HL=adapters/hikaru/hikaru-lock.args
+if need_hex "$HC" $BACKGROUND $BACKGROUND_ALT $DIM $CYAN $AMBER; then
+  ok "$HC canonical colors"
+fi
+for key in color-background color-focused color-inactive color-unfocused color-urgent; do
+  # Hikaru's parser accepts exactly '#' + 6 hex digits.
+  if grep -Eq "^${key} #[0-9a-fA-F]{6}\$" "$HC"; then
+    ok "hikaru $key is #rrggbb"
+  else
+    bad "hikaru $key missing or not #rrggbb"
+  fi
+done
+# Every hex in the hikaru adapter must come from the palette.
+for f in "$HC" "$HL"; do
+  hexes=$(grep -v '^#' "$f" | grep -Eio '(#|0x)[0-9a-f]{6}' | sed 's/^0x/#/' | tr 'A-F' 'a-f' | sort -u)
+  for h in $hexes; do
+    if ! grep -Eiq "^[A-Z_]+=${h}\$" palette; then
+      bad "$f uses $h which is not in palette"
+    fi
+  done
+  ok "$f hex values are in palette"
+done
+if grep -Eiq '1e1e2e|89b4fa|585b70|313244|f38ba8|cdd6f4' "$HC" "$HL"; then
+  bad "hikaru adapter still contains Catppuccin colors"
+else
+  ok "hikaru adapter has no Catppuccin colors"
+fi
+if grep -Eq '^(border|focus-border|gap-|cursor|layout|exec |bind)' "$HC"; then
+  bad "hikaru adapter sets non-color keys"
+else
+  ok "hikaru adapter is colors only"
+fi
+need_hex "$HL" 0x0a0e14 0x00d4c8 0xe05050 && ok "hikaru-lock waylock colors"
+
+echo
 if [ "$fail" -ne 0 ]; then
   echo "verify: FAILED"
   exit 1

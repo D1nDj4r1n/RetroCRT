@@ -19,7 +19,8 @@ install.sh [options]
 Installs visual adapters only:
   Vim colorscheme, Neovim colorscheme + oil highlights,
   Yazi theme.toml, Ghostty theme, zsh color fragment, tmux styles,
-  mako, swaylock, swaynag. Sway colors are included, not a full sway config.
+  mako, swaylock, swaynag, HikaruWM colors. Sway colors are included,
+  not a full sway config.
 
 Does not change: fonts, Ghostty padding/opacity, bindkey,
 Oh My Zsh plugin lists, the body of ~/.p10k.zsh, tmux keybinds,
@@ -125,6 +126,10 @@ link_or_copy "$DEST/adapters/mako/config" "$HOME/.config/mako/config"
 link_or_copy "$DEST/adapters/swaylock/config" "$HOME/.config/swaylock/config"
 link_or_copy "$DEST/adapters/swaynag/config" "$HOME/.config/swaynag/config"
 
+# HikaruWM (color-* fragment and waylock flags are printed below, not installed:
+# hikaru.conf and hikaru-lock are personal / installed-by-Hikaru files).
+# Hikaru reads mako from ~/.config/mako/config, so the mako adapter above applies.
+
 echo
 echo "Installed visual adapters."
 echo
@@ -149,5 +154,10 @@ echo "  sway (~/.config/sway/config):"
 echo "    include ${DEST}/adapters/sway/colors"
 echo "    # existing bar: copy adapters/sway/bar-colors into colors { }"
 echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
+echo "  hikaru (~/.config/hikaru/hikaru.conf):"
+echo "    replace the five color-* lines with ${DEST}/adapters/hikaru/hikaru.conf.fragment"
+echo "    waylock colors for hikaru-lock: ${DEST}/adapters/hikaru/hikaru-lock.args"
+echo "    note: a personal ~/.config/mako/config replaces Hikaru's shipped mako"
+echo "    layout entirely (font, size, anchor); the retrocrt mako adapter is colors only."
 echo
 echo "Do not move syntax-highlighting earlier than last among plugins."
