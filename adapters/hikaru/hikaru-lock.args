@@ -1,0 +1,11 @@
+# retrocrt — waylock colors for HikaruWM
+# Canonical palette: ../../palette
+#
+# Hikaru's hikaru-lock script hardcodes these three flags in its final line:
+#   exec waylock -init-color 0x000000 -input-color 0x202020 -fail-color 0x8b0000 "$@"
+# Replace the three values with the ones below (copy hikaru-lock to
+# ~/.local/bin or edit the installed one). Colors only. waylock takes 0xRRGGBB.
+
+-init-color 0x0a0e14
+-input-color 0x00d4c8
+-fail-color 0xe05050

@@ -1,0 +1,18 @@
+# retrocrt — HikaruWM colors
+# Canonical palette: ../../palette
+#
+# Append to ~/.config/hikaru/hikaru.conf (replace the five color-* lines).
+# Hikaru rejects unknown keys and only accepts #rrggbb for color-*.
+# Colors only. Does not set border width, gaps, cursor, layout, or binds.
+
+# compositor background (behind wallpaper / empty output)
+color-background #0a0e14
+# focused view = NORMAL / CYAN
+color-focused #00d4c8
+# view on an output that is not focused
+color-inactive #5a6570
+# unfocused view on the focused output
+color-unfocused #121820
+# urgent view, and the focused view while a non-NORMAL mode (resize) is active.
+# One key serves both, so AMBER (attention / INSERT), not RED.
+color-urgent #ffb020
