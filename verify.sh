@@ -320,6 +320,80 @@ fi
 need_hex "$HL" 0x0a0e14 0x00d4c8 0xe05050 && ok "hikaru-lock waylock colors"
 
 echo
+echo "=== dotfiles ==="
+# Install with --dotfiles into a throwaway HOME, then load each config there.
+dothome=$(mktemp -d "${TMPDIR:-/tmp}/retrocrt-verify.XXXXXX")
+trap 'rm -rf "$dothome"' EXIT
+if env -u XDG_CONFIG_HOME HOME="$dothome" sh "$ROOT/install.sh" --dotfiles >/dev/null 2>&1; then
+  ok "install.sh --dotfiles (scratch HOME)"
+else
+  bad "install.sh --dotfiles failed"
+fi
+case $(sh "$ROOT/install.sh" --packages) in
+  *'git clone'*) ok "install.sh --packages prints commands" ;;
+  *) bad "install.sh --packages printed no commands" ;;
+esac
+
+if command -v vim >/dev/null 2>&1; then
+  if HOME="$dothome" vim --not-a-term -n -es -u "$dothome/.vimrc" \
+       -c 'if get(g:, "colors_name", "") !=# "retrocrt" || !isdirectory(expand("~/.vim/undo")) | cquit | endif' \
+       -c 'qa!' >/dev/null 2>&1; then
+    ok "vimrc loads with colorscheme retrocrt and creates ~/.vim/undo"
+  else
+    bad "vimrc failed to load"
+  fi
+  # Console vim (no +clipboard) under Sway: unnamed yanks go to wl-copy.
+  if vim --version | grep -q -- '-clipboard'; then
+    mkdir -p "$dothome/bin"
+    printf '#!/bin/sh\ncat > "%s/wl-copy.out"\n' "$dothome" > "$dothome/bin/wl-copy"
+    chmod +x "$dothome/bin/wl-copy"
+    printf 'yank me\n' > "$dothome/yank.txt"
+    HOME="$dothome" PATH="$dothome/bin:$PATH" WAYLAND_DISPLAY=wayland-verify \
+      vim --not-a-term -n -es -u "$dothome/.vimrc" -c '1normal yy' -c 'qa!' "$dothome/yank.txt" >/dev/null 2>&1 || true
+    if [ "$(cat "$dothome/wl-copy.out" 2>/dev/null)" = "yank me" ]; then
+      ok "vimrc sends yanks to wl-copy when vim has no +clipboard"
+    else
+      bad "vimrc wl-copy fallback did not receive the yank"
+    fi
+  else
+    printf 'SKIP  vim has +clipboard; wl-copy fallback not used\n'
+  fi
+fi
+
+if command -v nvim >/dev/null 2>&1; then
+  # oil.nvim is a hand-installed pack; its absence is a notice, not a failure.
+  # Unset, not empty: Neovim takes an empty XDG_CONFIG_HOME as a relative path.
+  nvimout=$(env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME \
+    HOME="$dothome" nvim --headless \
+      -c 'if get(g:, "colors_name", "") !=# "retrocrt" | cquit 1 | endif' \
+      -c 'qa!' 2>&1) && rc=0 || rc=$?
+  nvimout=$(printf '%s\n' "$nvimout" | grep -v 'oil.nvim' | grep -v '^[[:space:]]*$' || true)
+  if [ "$rc" -eq 0 ] && [ -z "$nvimout" ]; then
+    ok "nvim init.lua + lua/config + lua/plugins load with colorscheme retrocrt"
+  else
+    bad "nvim config failed (exit $rc) ${nvimout}"
+  fi
+else
+  printf 'SKIP  nvim not installed\n'
+fi
+
+if command -v zsh >/dev/null 2>&1; then
+  if zsh -n "$ROOT/dotfiles/zsh/zshrc"; then
+    ok "zshrc parses (zsh -n)"
+  else
+    bad "zshrc has a syntax error"
+  fi
+  # Without Oh My Zsh / p10k (fresh system): zshrc still defines the battery.
+  zout=$(HOME="$dothome" ZDOTDIR="$dothome" zsh -i -c 'whence -w battery_info prompt_battery_info' 2>/dev/null || true)
+  case $zout in
+    *'battery_info: function'*'prompt_battery_info: function'*) ok "zshrc defines battery_info and the p10k segment" ;;
+    *) bad "zshrc battery functions missing: ${zout}" ;;
+  esac
+else
+  printf 'SKIP  zsh not installed\n'
+fi
+
+echo
 if [ "$fail" -ne 0 ]; then
   echo "verify: FAILED"
   exit 1

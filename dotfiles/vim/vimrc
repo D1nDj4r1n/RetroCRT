@@ -32,12 +32,26 @@ set hlsearch
 " === undo ===
 set undofile
 set undodir=~/.vim/undo
+" Vim nie tworzy undodir sam (Neovim tak); bez katalogu undo nie jest zapisywane.
+if !isdirectory(expand('~/.vim/undo'))
+  call mkdir(expand('~/.vim/undo'), 'p', 0700)
+endif
 set noswapfile
 set nobackup
 
 " === terminal / schowek ===
 set termguicolors
-set clipboard=unnamedplus
+if has('clipboard')
+  set clipboard=unnamedplus
+elseif executable('wl-copy') && !empty($WAYLAND_DISPLAY)
+  " Vim bez +clipboard (FreeBSD: pakiet vim, Arch: vim zamiast gvim) ignoruje
+  " unnamedplus. Pod Sway kopiuj nienazwany rejestr przez wl-copy.
+  " Wklejanie ze schowka: Ctrl+Shift+V w Ghostty.
+  augroup RetroClipboard
+    autocmd!
+    autocmd TextYankPost * if v:event.regname ==# '' | call system('wl-copy >/dev/null 2>&1', getreg('"')) | endif
+  augroup END
+endif
 colorscheme retrocrt
 
 " === klawisze ===
