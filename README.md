@@ -4,6 +4,8 @@ Universal visual system for this workstation.
 
 Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, small adapters.
 
+Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main terminal: **Ghostty**.
+
 ```text
                     retrocrt
                        │
@@ -15,18 +17,42 @@ Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, s
        │               │               │
        │            oil.nvim           │
        │                               │
-       └─────── Ghostty · foot ────────┘
-                       │
+       └─────────── Ghostty ───────────┘
+                       │        (foot: fallback, sway's default $term)
                       tmux
                        │
                       zsh
                        │
                   Powerlevel10k
                        │
-                     Sway · HikaruWM
+                     Sway               (HikaruWM: optional)
                        │
           mako · swaybar · swaylock · swaynag
 ```
+
+## SYSTEMS
+
+Both default systems run the same adapters and dotfiles. Only these differ:
+
+| | Arch Linux | FreeBSD |
+| --- | --- | --- |
+| packages | `pacman` | `pkg` |
+| Sway default config to copy | `/etc/sway/config` | `/usr/local/etc/sway/config` |
+| seat for Sway | logind (systemd) | `seatd` service + user in `video` group |
+| `XDG_RUNTIME_DIR` | set by logind | set automatically since FreeBSD 14.1 |
+| GPU | kernel driver | `drm-kmod` + `kld_list` (`i915kms`, `amdgpu`, `radeonkms`) |
+| battery (tmux, zsh prompt) | `/sys/class/power_supply/BAT*` | `sysctl hw.acpi.battery.*` |
+| Vim system clipboard | `+clipboard` in `vim --version` (`gvim` has it): native; otherwise the `wl-copy` fallback | console `vim` has no `+clipboard`: `wl-copy` fallback; `vim-gtk3` has it |
+
+```sh
+./install.sh --packages      # prints pacman or pkg + git clone lines for this system
+```
+
+It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, ghostty, foot, wl-clipboard, tmux, zsh, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems (FreeBSD has no Powerlevel10k port).
+
+FreeBSD steps, from the Handbook's Wayland chapter: `sysrc seatd_enable=YES`, `service seatd start`, `pw groupmod video -m <user>`.
+
+Sway: copy the default config, change its terminal line to `set $term ghostty` (the default is `foot`), then `include` the retrocrt colors (see INSTALL).
 
 ## NAME
 
@@ -158,8 +184,8 @@ HikaruWM mapping:
 | Neovim | `adapters/nvim/` | IDE theme + oil.nvim + diagnostics |
 | oil.nvim | groups in the Neovim adapter | in-editor explorer |
 | Yazi | `adapters/yazi/theme.toml` | terminal file manager |
-| Ghostty | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
-| foot | `adapters/foot/retrocrt` | terminal ANSI/theme (Hikaru's terminal; `include=` file) |
+| Ghostty | `adapters/ghostty/retrocrt` | main terminal ANSI/theme |
+| foot | `adapters/foot/retrocrt` | fallback terminal (sway's default `$term`; `include=` file) |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 | Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
@@ -167,10 +193,29 @@ HikaruWM mapping:
 | mako | `adapters/mako/config` | notifications |
 | swaylock | `adapters/swaylock/config` | lock screen |
 | swaynag | `adapters/swaynag/config` | nagbar |
-| HikaruWM | `adapters/hikaru/hikaru.conf.fragment` | `color-*` window border keys |
+| HikaruWM (optional) | `adapters/hikaru/hikaru.conf.fragment` | `color-*` window border keys |
 | waylock (Hikaru) | `adapters/hikaru/hikaru-lock.args` | lock screen flags |
 
 Vim and Neovim stay distinct. Yazi and oil.nvim stay distinct.
+
+## DOTFILES
+
+Personal configs that use the adapters. Installed only with `./install.sh --dotfiles` (existing files are moved to `*.bak.<timestamp>`).
+
+| File | Installed as |
+| --- | --- |
+| `dotfiles/vim/vimrc` | `~/.vimrc` |
+| `dotfiles/nvim/init.lua` | `~/.config/nvim/init.lua` |
+| `dotfiles/nvim/lua/config/`, `lua/plugins/` | `~/.config/nvim/lua/config`, `lua/plugins` |
+| `dotfiles/nvim/after/ftplugin/` | `~/.config/nvim/after/ftplugin` |
+| `dotfiles/zsh/zshrc` | `~/.zshrc` |
+
+Portable on both systems:
+
+- vimrc creates `~/.vim/undo` (Vim does not). Without `+clipboard`, unnamed yanks go to `wl-copy` under Sway; paste with Ctrl+Shift+V in Ghostty.
+- Neovim `clipboard=unnamedplus` uses `wl-copy`/`wl-paste` (`wl-clipboard`).
+- zshrc battery reads sysfs on Arch and `sysctl` on FreeBSD. Powerlevel10k rebuilds `RPROMPT` on every prompt, so with p10k the battery is a p10k segment (`battery_info`) appended to the right prompt from zshrc; `~/.p10k.zsh` is not edited. p10k's own `battery` segment covers Linux and macOS only.
+- zshrc says what to clone when Oh My Zsh is missing; `PATH` uses `$HOME/.local/bin`.
 
 ## RULES
 
@@ -208,13 +253,36 @@ Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unus
 From this repository on the workstation:
 
 ```sh
+./install.sh --packages      # print the pacman / pkg and git clone lines; run them yourself
 ./install.sh                 # adapters only; --dry-run shows actions
-./install.sh --hikaru-conf   # also set color-* in ~/.config/hikaru/hikaru.conf (backup kept)
+./install.sh --dotfiles      # adapters + dotfiles/ (vimrc, zshrc, Neovim config)
+./install.sh --hikaru-conf   # optional HikaruWM: set color-* in ~/.config/hikaru/hikaru.conf
 ```
 
-Works on Linux and FreeBSD (POSIX sh, base utilities, no package installs). On FreeBSD the tmux battery segment reads `sysctl hw.acpi.battery.*`. Hikaru's own CI covers FreeBSD 14.3 and 15.0; retrocrt installs color files only and has not been run on 15.1 hardware or a VM.
+POSIX sh with base utilities, the same on Arch Linux and FreeBSD. No package installs. Not yet run on FreeBSD hardware or in a FreeBSD VM; the FreeBSD paths were checked against the ports tree, the Handbook, and `acpiio.h`.
 
 Then add, if missing:
+
+```text
+# ~/.config/ghostty/config — main terminal
+theme = retrocrt
+```
+
+```text
+# ~/.config/sway/config — main WM; copy the default config first
+# (Arch /etc/sway/config, FreeBSD /usr/local/etc/sway/config)
+set $term ghostty
+include ~/.config/retrocrt/adapters/sway/colors
+# existing bar: copy adapters/sway/bar-colors into colors { }
+# no bar yet: include ~/.config/retrocrt/adapters/sway/bar
+```
+
+```tmux
+# ~/.tmux.conf
+source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
+```
+
+Without `--dotfiles`, also:
 
 ```vim
 " ~/.vimrc
@@ -226,27 +294,12 @@ colorscheme retrocrt
 vim.cmd.colorscheme("retrocrt")
 ```
 
-```text
-# ~/.config/ghostty/config
-theme = retrocrt
-```
-
 ```zsh
 # ~/.zshrc — after Oh My Zsh, p10k, and zsh-syntax-highlighting (last plugin)
 source ~/.config/retrocrt/adapters/zsh/retrocrt.zsh
 ```
 
-```tmux
-# ~/.tmux.conf
-source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
-```
-
-```text
-# ~/.config/sway/config
-include ~/.config/retrocrt/adapters/sway/colors
-# existing bar: copy adapters/sway/bar-colors into colors { }
-# no bar yet: include ~/.config/retrocrt/adapters/sway/bar
-```
+`dotfiles/zsh/zshrc` keeps its own retrocrt token colors and does not source this adapter, so p10k colors stay as `~/.p10k.zsh` sets them.
 
 mako, swaylock, and swaynag load `~/.config/<app>/config` after `./install.sh`.
 
@@ -272,6 +325,8 @@ source retrocrt.zsh         color overlay
 ./verify.sh
 ```
 
+Besides palette and adapters, it installs `--dotfiles` into a throwaway `HOME` and loads the vimrc, the Neovim config, and the zshrc there (including the `wl-copy` fallback when `vim` has no `+clipboard`).
+
 Manual checks:
 
 ```text
@@ -279,11 +334,12 @@ vim  -c 'colorscheme retrocrt'
 nvim -c 'colorscheme retrocrt'
 yazi
 # Ghostty: theme = retrocrt
-# zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion
+# zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion; battery on the right
 # tmux: battery left, date right; copy-mode MAGENTA
-# sway: include adapters/sway/colors; reload
+# sway: set $term ghostty; include adapters/sway/colors; reload
 # mako: makoctl reload
 # swaylock / swaynag: configs in ~/.config/
+# clipboard: yank in vim / nvim, paste in Ghostty with Ctrl+Shift+V
 ```
 
 ---

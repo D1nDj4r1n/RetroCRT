@@ -1,6 +1,7 @@
 #!/bin/sh
-# retrocrt — install adapters into a workstation home directory.
-# Does not install plugin managers, fonts, or rewrite p10k/Ghostty preferences.
+# retrocrt — install adapters (and, with --dotfiles, dotfiles/) into a home directory.
+# Default systems: Arch Linux and FreeBSD. Sway is the WM, Ghostty the terminal.
+# Does not install packages, plugin managers, or fonts; --packages only prints commands.
 
 set -eu
 
@@ -11,41 +12,116 @@ usage() {
   cat <<EOF
 install.sh [options]
 
-  --link     symlink this repository to $DEST (default)
-  --copy     copy palette, README, and adapters to $DEST
+  --link         symlink this repository to $DEST (default)
+  --copy         copy palette, README, adapters, and dotfiles to $DEST
+  --dotfiles     also install dotfiles/: ~/.vimrc, ~/.zshrc, and the Neovim
+                 config (init.lua, lua/config, lua/plugins, after/ftplugin)
+  --packages     print the package and git clone commands for this system, then exit
   --hikaru-conf  rewrite the five color-* lines in ~/.config/hikaru/hikaru.conf
-                 (timestamped backup; only if the file exists; other keys untouched)
-  --dry-run  print actions without changing files
-  --help     show this help
+                 (optional HikaruWM; timestamped backup; only if the file exists)
+  --dry-run      print actions without changing files
+  --help         show this help
 
-Installs visual adapters only:
+Default systems: Arch Linux and FreeBSD (POSIX sh, base utilities only).
+Main stack: Sway + Ghostty + tmux + zsh + Vim/Neovim.
+
+Installs visual adapters:
   Vim colorscheme, Neovim colorscheme + oil highlights,
   Yazi theme.toml, Ghostty theme, foot theme, zsh color fragment, tmux styles,
-  mako, swaylock, swaynag, HikaruWM colors. Sway colors are included,
-  not a full sway config.
+  Sway colors, mako, swaylock, swaynag, HikaruWM colors.
+  Sway colors are included, not a full sway config.
 
-Runs on Linux and FreeBSD (POSIX sh, base utilities only; no package installs).
+Existing files are moved to <name>.bak.<timestamp> before they are replaced.
 
-Does not change: fonts, Ghostty padding/opacity, bindkey,
+Adapters do not change: fonts, Ghostty padding/opacity, bindkey,
 Oh My Zsh plugin lists, the body of ~/.p10k.zsh, tmux keybinds,
-or Sway keybinds/outputs.
+or Sway keybinds/outputs. --dotfiles installs your own vimrc, zshrc,
+and Neovim config from this repository; it never touches ~/.p10k.zsh.
+EOF
+}
+
+detect_system() {
+  case $(uname -s 2>/dev/null) in
+    FreeBSD) echo freebsd ;;
+    Linux)
+      id='' like=''
+      if [ -r /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        id=$(. /etc/os-release && printf '%s' "${ID:-}")
+        # shellcheck disable=SC1091
+        like=$(. /etc/os-release && printf '%s' "${ID_LIKE:-}")
+      fi
+      case " $id $like " in
+        *" arch "*) echo arch ;;
+        *) echo linux ;;
+      esac
+      ;;
+    *) echo other ;;
+  esac
+}
+
+print_packages() {
+  # Printed, not run: review, then run the root lines as root.
+  user=$(id -un)
+  case $SYSTEM in
+    arch|freebsd) ;;
+    *) printf '# %s is not a default system (Arch Linux, FreeBSD); both lists follow.\n\n' "$SYSTEM" ;;
+  esac
+  if [ "$SYSTEM" != freebsd ]; then
+    cat <<'EOF'
+# Arch Linux (as root)
+pacman -S --needed sway swaylock swayidle swaybg mako ghostty foot wl-clipboard \
+    tmux zsh git fzf vim neovim yazi ttf-jetbrains-mono-nerd
+
+EOF
+  fi
+  if [ "$SYSTEM" != arch ]; then
+    cat <<EOF
+# FreeBSD (as root). Sway needs seatd and the video group (FreeBSD Handbook,
+# Wayland chapter). XDG_RUNTIME_DIR is set automatically since FreeBSD 14.1.
+pkg install sway swaylock swayidle swaybg mako ghostty foot wl-clipboard seatd drm-kmod \\
+    tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
+sysrc seatd_enable=YES
+service seatd start
+pw groupmod video -m $user
+# GPU driver from drm-kmod, one of: sysrc kld_list+=i915kms | amdgpu | radeonkms
+
+EOF
+  fi
+  cat <<'EOF'
+# Both systems (as yourself): what dotfiles/zsh/zshrc and dotfiles/nvim load
+git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh ~/.oh-my-zsh
+git clone --depth 1 https://github.com/romkatv/powerlevel10k ~/.oh-my-zsh/custom/themes/powerlevel10k
+git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+git clone --depth 1 https://github.com/stevearc/oil.nvim ~/.local/share/nvim/site/pack/retro/start/oil.nvim
+chsh -s "$(command -v zsh)"
 EOF
 }
 
 MODE=link
 DRY=0
+DOTFILES=0
+PACKAGES=0
 HIKARU_CONF=0
-OS=$(uname -s 2>/dev/null || echo unknown)
+SYSTEM=$(detect_system)
 for arg in "$@"; do
   case "$arg" in
     --link) MODE=link ;;
     --copy) MODE=copy ;;
+    --dotfiles) DOTFILES=1 ;;
+    --packages) PACKAGES=1 ;;
     --hikaru-conf) HIKARU_CONF=1 ;;
     --dry-run) DRY=1 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "unknown option: $arg" >&2; usage >&2; exit 1 ;;
   esac
 done
+
+if [ "$PACKAGES" -eq 1 ]; then
+  print_packages
+  exit 0
+fi
 
 run() {
   if [ "$DRY" -eq 1 ]; then
@@ -127,7 +203,7 @@ apply_hikaru_colors() {
 echo "repo: $REPO"
 echo "dest: $DEST"
 echo "mode: $MODE"
-echo "os:   $OS"
+echo "os:   $(uname -sr 2>/dev/null) ($SYSTEM)"
 
 if [ "$MODE" = link ]; then
   if [ "$DEST" != "$REPO" ]; then
@@ -148,6 +224,8 @@ else
   run cp "$REPO/palette" "$DEST/palette"
   run cp "$REPO/README.md" "$DEST/README.md"
   run cp -R "$REPO/adapters/." "$DEST/adapters/"
+  run mkdir -p "$DEST/dotfiles"
+  run cp -R "$REPO/dotfiles/." "$DEST/dotfiles/"
 fi
 
 # Vim adapter
@@ -180,46 +258,78 @@ if [ "$HIKARU_CONF" -eq 1 ]; then
   apply_hikaru_colors
 fi
 
+# Dotfiles (opt-in): your vimrc, zshrc, and Neovim config from dotfiles/.
+# Neovim gets per-directory links so ~/.config/nvim/lua stays a real directory
+# for the adapter's retrocrt.lua and for anything else you keep there.
+if [ "$DOTFILES" -eq 1 ]; then
+  link_or_copy "$DEST/dotfiles/vim/vimrc" "$HOME/.vimrc"
+  run mkdir -p "$HOME/.vim/undo"
+  run chmod 700 "$HOME/.vim/undo"
+  link_or_copy "$DEST/dotfiles/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+  link_or_copy "$DEST/dotfiles/nvim/lua/config" "$HOME/.config/nvim/lua/config"
+  link_or_copy "$DEST/dotfiles/nvim/lua/plugins" "$HOME/.config/nvim/lua/plugins"
+  link_or_copy "$DEST/dotfiles/nvim/after/ftplugin" "$HOME/.config/nvim/after/ftplugin"
+  link_or_copy "$DEST/dotfiles/zsh/zshrc" "$HOME/.zshrc"
+fi
+
 echo
-echo "Installed visual adapters."
+if [ "$DOTFILES" -eq 1 ]; then
+  echo "Installed visual adapters and dotfiles (vimrc, zshrc, Neovim config)."
+else
+  echo "Installed visual adapters."
+fi
 echo
 echo "Add these lines if they are not already present:"
 echo
-echo "  vim  (~/.vimrc):"
-echo "    colorscheme retrocrt"
-echo
-echo "  nvim (~/.config/nvim/init.lua):"
-echo "    vim.cmd.colorscheme('retrocrt')"
-echo
-echo "  ghostty (~/.config/ghostty/config):"
+echo "  ghostty, main terminal (~/.config/ghostty/config):"
 echo "    theme = retrocrt"
 echo
-echo "  foot (~/.config/foot/foot.ini, top of file):"
-echo "    include=~/.config/foot/themes/retrocrt"
-echo
-echo "  zsh (~/.zshrc) AFTER oh-my-zsh, p10k, and syntax-highlighting:"
-echo "    source ${DEST}/adapters/zsh/retrocrt.zsh"
+echo "  sway, main WM (~/.config/sway/config; start from the default config:"
+echo "  Arch /etc/sway/config, FreeBSD /usr/local/etc/sway/config):"
+echo "    set \$term ghostty        # the default config sets foot"
+echo "    include ${DEST}/adapters/sway/colors"
+echo "    # existing bar: copy adapters/sway/bar-colors into colors { }"
+echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
 echo
 echo "  tmux (~/.tmux.conf):"
 echo "    source-file ${DEST}/adapters/tmux/retrocrt.conf"
 echo
-echo "  sway (~/.config/sway/config):"
-echo "    include ${DEST}/adapters/sway/colors"
-echo "    # existing bar: copy adapters/sway/bar-colors into colors { }"
-echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
-echo "  hikaru (~/.config/hikaru/hikaru.conf):"
-echo "    re-run with --hikaru-conf, or replace the five color-* lines with"
-echo "    ${DEST}/adapters/hikaru/hikaru.conf.fragment"
-echo "    waylock colors for hikaru-lock: ${DEST}/adapters/hikaru/hikaru-lock.args"
-echo "    note: a personal ~/.config/mako/config replaces Hikaru's shipped mako"
-echo "    layout entirely (font, size, anchor); the retrocrt mako adapter is colors only."
-echo
-if [ "$OS" = FreeBSD ]; then
+if [ "$DOTFILES" -eq 0 ]; then
+  echo "  vim  (~/.vimrc):"
+  echo "    colorscheme retrocrt"
   echo
-  echo "FreeBSD: mako, waylock, wbg, and foot come from pkg/ports (see Hikaru"
-  echo "docs/RUN/FREEBSD.md). The tmux battery segment reads"
-  echo "sysctl hw.acpi.battery.*; Hikaru's CI covers FreeBSD 14.3 and 15.0,"
-  echo "retrocrt only installs color files and does not depend on the release."
+  echo "  nvim (~/.config/nvim/init.lua):"
+  echo "    vim.cmd.colorscheme('retrocrt')"
+  echo
+  echo "  zsh (~/.zshrc) AFTER oh-my-zsh, p10k, and syntax-highlighting:"
+  echo "    source ${DEST}/adapters/zsh/retrocrt.zsh"
+  echo
 fi
+echo "  foot, fallback terminal (~/.config/foot/foot.ini, top of file):"
+echo "    include=~/.config/foot/themes/retrocrt"
+echo
+if [ "$HIKARU_CONF" -eq 1 ] || command -v hikaru >/dev/null 2>&1 || [ -d "$HOME/.config/hikaru" ]; then
+  echo "  hikaru, optional WM (~/.config/hikaru/hikaru.conf):"
+  echo "    re-run with --hikaru-conf, or replace the five color-* lines with"
+  echo "    ${DEST}/adapters/hikaru/hikaru.conf.fragment"
+  echo "    waylock colors for hikaru-lock: ${DEST}/adapters/hikaru/hikaru-lock.args"
+  echo "    note: a personal ~/.config/mako/config replaces Hikaru's shipped mako"
+  echo "    layout entirely (font, size, anchor); the retrocrt mako adapter is colors only."
+  echo
+fi
+case $SYSTEM in
+  freebsd)
+    echo "FreeBSD: Sway needs seatd running and your user in the video group;"
+    echo "XDG_RUNTIME_DIR is set automatically since FreeBSD 14.1. The tmux and"
+    echo "zsh battery read sysctl hw.acpi.battery.*."
+    ;;
+  arch)
+    echo "Arch Linux: the tmux and zsh battery read /sys/class/power_supply/BAT*."
+    ;;
+  *)
+    echo "$SYSTEM is not a default system (Arch Linux, FreeBSD); adapters still install."
+    ;;
+esac
+echo "Packages and git clones for this system: ./install.sh --packages"
 echo
 echo "Do not move syntax-highlighting earlier than last among plugins."

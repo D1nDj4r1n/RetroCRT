@@ -1,5 +1,10 @@
 # ~/.config/sway/config fragment — retrocrt
 # Colors only. Keep binds, outputs, input, and gaps.
+#
+# Sway is the main WM and Ghostty the main terminal. Start from the default
+# config (Arch: /etc/sway/config, FreeBSD: /usr/local/etc/sway/config) and
+# change its terminal line, which sets foot, before the bindings that use it:
+#   set $term ghostty
 
 include ~/.config/retrocrt/adapters/sway/colors
 

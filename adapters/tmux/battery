@@ -20,18 +20,21 @@ for d in /sys/class/power_supply/*; do
 done
 
 # FreeBSD: no /sys/class/power_supply. hw.acpi.battery.life is a percentage,
-# hw.acpi.battery.state is a bitmask (1 discharging, 2 charging, 4 critical).
+# hw.acpi.battery.state is a bitmask (1 discharging, 2 charging, 4 critical;
+# 7 means not present, sys/dev/acpica/acpiio.h).
 if [ -z "$cap" ] && [ "$(uname -s 2>/dev/null)" = FreeBSD ]; then
   life=$(sysctl -n hw.acpi.battery.life 2>/dev/null) || life=""
   case "$life" in
     ''|*[!0-9]*) ;;
     *)
-      cap=$life
       bst=$(sysctl -n hw.acpi.battery.state 2>/dev/null) || bst=0
       case "$bst" in
         ''|*[!0-9]*) bst=0 ;;
       esac
-      [ $((bst & 2)) -ne 0 ] && st=Charging
+      if [ "$bst" -ne 7 ]; then
+        cap=$life
+        [ $((bst & 2)) -ne 0 ] && st=Charging
+      fi
       ;;
   esac
 fi
