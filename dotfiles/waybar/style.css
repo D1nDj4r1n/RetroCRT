@@ -1,0 +1,48 @@
+/* retrocrt — Waybar layout for FreeBSD. Colors come from the adapter. */
+@import "retrocrt.css";
+
+* {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 13px;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+}
+
+#workspaces button {
+  padding: 0 8px;
+}
+
+#mode,
+#window,
+#custom-net,
+#custom-audio,
+#cpu,
+#memory,
+#temperature,
+#tray,
+#clock {
+  padding: 0 10px;
+}
+
+/* 1px of bar between segments on the same surface, as tmux's thin separator */
+#custom-audio,
+#cpu,
+#memory,
+#temperature,
+#tray {
+  margin-left: 1px;
+}
+#clock {
+  margin-left: 4px;
+}
+
+#workspaces button.focused,
+#mode,
+#clock {
+  font-weight: bold;
+}
+
+tooltip {
+  border: 1px solid;
+}

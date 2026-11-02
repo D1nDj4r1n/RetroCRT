@@ -16,12 +16,16 @@ install.sh [options]
   --link         symlink this repository to $DEST (default)
   --copy         copy palette, README, adapters, and dotfiles to $DEST
   --dotfiles     also install dotfiles/: ~/.vimrc, ~/.zshrc, and the Neovim
-                 config (init.lua, lua/config, lua/plugins, after/ftplugin)
+                 config (init.lua, lua/config, lua/plugins, after/ftplugin);
+                 on FreeBSD also Waybar (config.jsonc, style.css, scripts/)
   --packages     print the package and git clone commands for this system, then exit
   --hikaru-conf  rewrite the five color-* lines in ~/.config/hikaru/hikaru.conf
                  (optional HikaruWM; timestamped backup; only if the file exists)
   --dry-run      print actions without changing files
   --help         show this help
+
+  RETROCRT_SYSTEM=arch|freebsd  overrides system detection (e.g. to prepare
+                 or test the FreeBSD files on another machine)
 
 Default systems: Arch Linux and FreeBSD (POSIX sh, base utilities only).
 Main stack: Sway + Kitty + tmux + zsh + Vim/Neovim, on every device.
@@ -30,7 +34,8 @@ Installs visual adapters:
   Vim colorscheme, Neovim colorscheme + oil highlights,
   Yazi theme.toml, Kitty theme, Ghostty and foot themes, zsh color fragment, tmux styles
   (+ powerline status line),
-  Sway colors, mako, swaylock, swaynag, HikaruWM colors.
+  Sway colors, mako, swaylock, swaynag, HikaruWM colors;
+  on FreeBSD the Waybar colors (Arch keeps swaybar).
   Sway colors are included, not a full sway config.
 
 Existing files are moved to <name>.bak.<timestamp> before they are replaced.
@@ -43,6 +48,10 @@ EOF
 }
 
 detect_system() {
+  if [ -n "${RETROCRT_SYSTEM:-}" ]; then
+    echo "$RETROCRT_SYSTEM"
+    return 0
+  fi
   case $(uname -s 2>/dev/null) in
     FreeBSD) echo freebsd ;;
     Linux)
@@ -82,11 +91,12 @@ EOF
 # FreeBSD (as root). Sway needs seatd and the video group (FreeBSD Handbook,
 # Wayland chapter). XDG_RUNTIME_DIR is set automatically since FreeBSD 14.1.
 pkg install sway swaylock swayidle swaybg mako kitty foot wl-clipboard seatd drm-kmod \\
-    tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
+    waybar tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
 sysrc seatd_enable=YES
 service seatd start
 pw groupmod video -m $user
 # GPU driver from drm-kmod, one of: sysrc kld_list+=i915kms | amdgpu | radeonkms
+# CPU temperature for Waybar, one of: sysrc kld_list+=coretemp | amdtemp
 
 EOF
   fi
@@ -264,6 +274,11 @@ if [ "$HIKARU_CONF" -eq 1 ]; then
   apply_hikaru_colors
 fi
 
+# Waybar is the FreeBSD bar (Arch keeps swaybar): colors on FreeBSD only.
+if [ "$SYSTEM" = freebsd ]; then
+  link_or_copy "$DEST/adapters/waybar/retrocrt.css" "$HOME/.config/waybar/retrocrt.css"
+fi
+
 # Dotfiles (opt-in): your vimrc, zshrc, and Neovim config from dotfiles/.
 # Neovim gets per-directory links so ~/.config/nvim/lua stays a real directory
 # for the adapter's retrocrt.lua and for anything else you keep there.
@@ -276,6 +291,11 @@ if [ "$DOTFILES" -eq 1 ]; then
   link_or_copy "$DEST/dotfiles/nvim/lua/plugins" "$HOME/.config/nvim/lua/plugins"
   link_or_copy "$DEST/dotfiles/nvim/after/ftplugin" "$HOME/.config/nvim/after/ftplugin"
   link_or_copy "$DEST/dotfiles/zsh/zshrc" "$HOME/.zshrc"
+  if [ "$SYSTEM" = freebsd ]; then
+    link_or_copy "$DEST/dotfiles/waybar/config.jsonc" "$HOME/.config/waybar/config.jsonc"
+    link_or_copy "$DEST/dotfiles/waybar/style.css" "$HOME/.config/waybar/style.css"
+    link_or_copy "$DEST/dotfiles/waybar/scripts" "$HOME/.config/waybar/scripts"
+  fi
 fi
 
 echo
@@ -295,8 +315,19 @@ echo "  Arch /etc/sway/config, FreeBSD /usr/local/etc/sway/config):"
 echo "    set \$term kitty          # the default config sets foot"
 echo "    include ${DEST}/adapters/sway/colors"
 echo "    # existing bar: copy adapters/sway/bar-colors into colors { }"
-echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
+if [ "$SYSTEM" = freebsd ]; then
+  echo "    # FreeBSD bar is Waybar; replace the bar { } block with:"
+  echo "    bar { swaybar_command waybar }"
+else
+  echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
+fi
 echo
+if [ "$SYSTEM" = freebsd ] && [ "$DOTFILES" -eq 0 ]; then
+  echo "  waybar, FreeBSD (~/.config/waybar/style.css, first line):"
+  echo "    @import \"retrocrt.css\";"
+  echo "    (or ./install.sh --dotfiles for the retrocrt config.jsonc and scripts)"
+  echo
+fi
 echo "  tmux (~/.tmux.conf):"
 echo "    source-file ${DEST}/adapters/tmux/retrocrt.conf"
 echo "    source-file ${DEST}/adapters/tmux/power.conf   # powerline bar; omit for flat"

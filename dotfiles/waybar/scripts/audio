@@ -1,0 +1,26 @@
+#!/bin/sh
+# retrocrt — Waybar volume for FreeBSD (custom/audio).
+# OSS through mixer(8) from the base system (FreeBSD 14+ syntax); no
+# PulseAudio or sndiod needed. Prints one line of Waybar JSON;
+# class: on, muted, or none (no mixer).
+
+vol=$(mixer vol.volume 2>/dev/null)   # vol.volume=0.75:0.75
+mute=$(mixer vol.mute 2>/dev/null)    # vol.mute=off
+
+case $vol in
+  vol.volume=*) ;;
+  *)
+    printf '{"text":"VOL --","tooltip":"no mixer","class":"none"}\n'
+    exit 0
+    ;;
+esac
+
+left=${vol#*=}
+left=${left%%:*}
+pct=$(printf '%s\n' "$left" | awk '{ printf "%d", $1 * 100 + 0.5 }')
+
+if [ "$mute" = vol.mute=on ]; then
+  printf '{"text":"VOL mute","tooltip":"vol %s%% (muted)","class":"muted","percentage":%s}\n' "$pct" "$pct"
+else
+  printf '{"text":"VOL %s%%","tooltip":"vol %s%%","class":"on","percentage":%s}\n' "$pct" "$pct" "$pct"
+fi

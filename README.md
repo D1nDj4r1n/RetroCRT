@@ -27,7 +27,7 @@ Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main termina
                        │
                      Sway               (HikaruWM: optional)
                        │
-          mako · swaybar · swaylock · swaynag
+          mako · swaybar (Arch) · Waybar (FreeBSD) · swaylock · swaynag
 ```
 
 ## SYSTEMS
@@ -42,6 +42,7 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 | `XDG_RUNTIME_DIR` | set by logind | set automatically since FreeBSD 14.1 |
 | GPU | kernel driver | `drm-kmod` + `kld_list` (`i915kms`, `amdgpu`, `radeonkms`) |
 | Kitty (main terminal) | `kitty` | `kitty` (port built with Wayland, runs natively under Sway) |
+| bar | swaybar (`adapters/sway/bar`) | Waybar (`adapters/waybar`, `dotfiles/waybar`; see WAYBAR) |
 | battery (tmux, zsh prompt) | `/sys/class/power_supply/`: tmux takes a type Battery that is not scope Device (mouse, gamepad); zsh `BAT*` | `sysctl hw.acpi.battery.*`; a PC without an ACPI battery has no such node |
 | tmux | 3.4 or newer; since 3.7 the prompt needs `fill`, which `retrocrt.conf` sets | same (ports: 3.8) |
 | Vim system clipboard | `+clipboard` in `vim --version` (`gvim` has it): native; otherwise the `wl-copy` fallback | console `vim` has no `+clipboard`: `wl-copy` fallback; `vim-gtk3` has it |
@@ -50,9 +51,9 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 ./install.sh --packages      # prints pacman or pkg + git clone lines for this system
 ```
 
-It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, kitty, foot, wl-clipboard, tmux, zsh, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems (FreeBSD has no Powerlevel10k port).
+It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, kitty, foot, wl-clipboard, tmux, zsh, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, waybar, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems (FreeBSD has no Powerlevel10k port).
 
-FreeBSD steps, from the Handbook's Wayland chapter: `sysrc seatd_enable=YES`, `service seatd start`, `pw groupmod video -m <user>`.
+FreeBSD steps, from the Handbook's Wayland chapter: `sysrc seatd_enable=YES`, `service seatd start`, `pw groupmod video -m <user>`. For the Waybar temperature: `sysrc kld_list+=coretemp` (Intel) or `amdtemp` (AMD).
 
 ### Laptop or PC
 
@@ -200,6 +201,25 @@ Kitty mapping:
 | URL | BLUE (as Underlined in Neovim) |
 | marks 1 / 2 / 3 | AMBER / CYAN / MAGENTA (as tmux copy-mode match / current / mark) |
 
+Waybar mapping (FreeBSD):
+
+| Waybar | Role |
+| --- | --- |
+| bar | BACKGROUND, text FOREGROUND |
+| workspace focused | BACKGROUND on CYAN (NORMAL) |
+| workspace visible on another output | CYAN on BACKGROUND_ALT |
+| workspace inactive | DIM on BACKGROUND_ALT |
+| workspace urgent | RED on DIFF_DELETE_BG (as the tmux power bell) |
+| workspace hover | VISUAL_BG |
+| binding mode | BACKGROUND on AMBER (INSERT) |
+| segments: net, audio, cpu, memory, temperature, tray | FOREGROUND on BACKGROUND_ALT |
+| network up / Wi-Fi | GREEN |
+| network down | RED |
+| audio muted / no mixer | DIM |
+| cpu, memory warning | AMBER |
+| cpu, memory, temperature critical | BACKGROUND on RED |
+| date | BACKGROUND on BLUE (as tmux power Z) |
+
 Sway mapping:
 
 | Sway | Role |
@@ -243,7 +263,8 @@ HikaruWM mapping:
 | tmux power | `adapters/tmux/power.conf` | powerline status line (default look): mode pill, sections, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 | Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
-| swaybar | `adapters/sway/bar-colors` | workspaces + binding mode |
+| swaybar | `adapters/sway/bar-colors` | workspaces + binding mode (Arch) |
+| Waybar (FreeBSD) | `adapters/waybar/retrocrt.css` | `@define-color` palette + module colors |
 | mako | `adapters/mako/config` | notifications |
 | swaylock | `adapters/swaylock/config` | lock screen |
 | swaynag | `adapters/swaynag/config` | nagbar |
@@ -263,6 +284,7 @@ Personal configs that use the adapters. Installed only with `./install.sh --dotf
 | `dotfiles/nvim/lua/config/`, `lua/plugins/` | `~/.config/nvim/lua/config`, `lua/plugins` |
 | `dotfiles/nvim/after/ftplugin/` | `~/.config/nvim/after/ftplugin` |
 | `dotfiles/zsh/zshrc` | `~/.zshrc` |
+| `dotfiles/waybar/` (FreeBSD only) | `~/.config/waybar/config.jsonc`, `style.css`, `scripts/` |
 
 Portable on both systems:
 
@@ -337,6 +359,34 @@ tmux display -p 'utf8=#{client_utf8} term=#{client_termname} tmux=#{version}'
 | `power`, `utf8=0` | tmux sees no UTF-8 | tmux 3.8+ in Kitty: detach and attach again (features apply on attach); older tmux: a UTF-8 `LANG` (Arch `/etc/locale.conf`) or `tmux -u` |
 | `power`, `utf8=1`, boxes instead of arrows | no font has U+E0B0 | install the Nerd Font from `./install.sh --packages` |
 
+## WAYBAR
+
+FreeBSD only; Arch keeps swaybar. Colors are the adapter `adapters/waybar/retrocrt.css`; the bar itself is a dotfile, installed by `./install.sh --dotfiles` on FreeBSD (`RETROCRT_SYSTEM=freebsd` forces it elsewhere):
+
+```text
+~/.config/waybar/config.jsonc   modules, from dotfiles/waybar/
+~/.config/waybar/style.css      font, padding; @import "retrocrt.css"
+~/.config/waybar/retrocrt.css   colors (adapter)
+~/.config/waybar/scripts/       net, audio (POSIX sh, FreeBSD base tools)
+```
+
+```text
+[ 1 ][ 2 ][ resize ]          window title          [NET em0 192.168.1.10][VOL 75%][CPU 12%][MEM 40%][TMP 45°C][tray][2026-11-02 14:05]
+```
+
+| Module | FreeBSD source | Why |
+| --- | --- | --- |
+| `sway/workspaces`, `sway/mode`, `sway/window` | Sway IPC | |
+| `custom/net` | `route -n get default`, `ifconfig` | the port builds Waybar without libnl, so there is no `network` module |
+| `custom/audio` | `mixer vol.volume`, `vol.mute` (OSS, FreeBSD 14+) | no PulseAudio or sndiod needed; click mutes, scroll ±5% |
+| `cpu`, `memory` | Waybar's BSD code (sysctl) | |
+| `temperature` | `dev.cpu.0.temperature` (kld `coretemp` / `amdtemp`), else `hw.acpi.thermal.tz0` | |
+| `tray`, `clock` | | |
+
+No battery module: the FreeBSD machine is a PC (see Laptop or PC). Labels are text (`NET`, `VOL`, `CPU`), as the tmux battery, so no icon font is needed.
+
+Sway starts it: replace the `bar { }` block in `~/.config/sway/config` with `bar { swaybar_command waybar }`.
+
 ## RULES
 
 How a new application should consume retrocrt:
@@ -359,7 +409,9 @@ Known deviation: Hikaru has one `color-urgent` key for both urgent views and non
 
 Known deviation: tmux power uses `VISUAL_BG` as the raised segment surface (B, Y) as well as for copy-mode selection; the palette has no other mid-tone between `BACKGROUND_ALT` and the accents. Its bar is `BACKGROUND` (like the swaybar), not `BACKGROUND_ALT` as in the flat `retrocrt.conf`. `GREEN` reaches it only through the battery. Separators are Powerline glyphs from the Nerd Font in `--packages` (`ttf-jetbrains-mono-nerd`, `nerd-fonts-jetbrainsmono`); set them to `''` for flat blocks.
 
-Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unused there. waybar / wofi / fuzzel are not Sway's own programs; add them later as separate adapters.
+Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unused there. wofi / fuzzel are not Sway's own programs; add them later as separate adapters.
+
+Known deviation: Waybar has no selection either; `MAGENTA` is defined but unused, and hover uses `VISUAL_BG`. The adapter also resets `background-image` and shadows on buttons, because GTK's button gradient would hide the colors.
 
 ## ANTI-DRIFT
 
@@ -398,6 +450,8 @@ set $term kitty
 include ~/.config/retrocrt/adapters/sway/colors
 # existing bar: copy adapters/sway/bar-colors into colors { }
 # no bar yet: include ~/.config/retrocrt/adapters/sway/bar
+# FreeBSD: Waybar instead of swaybar
+# bar { swaybar_command waybar }
 ```
 
 ```tmux
@@ -465,6 +519,7 @@ yazi
 # tmux power: pill CYAN NORMAL; prefix AMBER PREFIX; copy-mode MAGENTA COPY; arrows close over empty sections
 # sway: set $term kitty; include adapters/sway/colors; reload
 # mako: makoctl reload
+# waybar (FreeBSD): focused workspace CYAN, mode AMBER, NET GREEN / RED, VOL click mutes, date BLUE
 # swaylock / swaynag: configs in ~/.config/
 # clipboard: yank in vim / nvim, paste in Kitty with Ctrl+Shift+V
 ```

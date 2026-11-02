@@ -1,0 +1,115 @@
+/* retrocrt — Waybar adapter (FreeBSD; Arch keeps swaybar)
+ * Canonical palette: ../../palette
+ * Install to ~/.config/waybar/retrocrt.css and import it first in style.css:
+ *   @import "retrocrt.css";
+ * Colors only. Font, size, padding, margins, and border widths belong in
+ * your style.css (dotfiles/waybar/style.css). The background-image and
+ * shadow resets are here because GTK's button gradient hides the colors.
+ *
+ * Roles follow the swaybar and tmux power:
+ *   bar BACKGROUND; segments BACKGROUND_ALT; focused workspace CYAN (NORMAL);
+ *   binding mode AMBER (INSERT); urgent RED on DIFF_DELETE_BG; date BLUE;
+ *   network up GREEN, down RED; muted DIM; warning AMBER; critical RED.
+ */
+
+@define-color retrocrt_background     #0a0e14;
+@define-color retrocrt_background_alt #121820;
+@define-color retrocrt_foreground     #c8d0d8;
+@define-color retrocrt_dim            #5a6570;
+@define-color retrocrt_cyan           #00d4c8;
+@define-color retrocrt_amber          #ffb020;
+@define-color retrocrt_magenta        #e040a0;
+@define-color retrocrt_green          #40c070;
+@define-color retrocrt_red            #e05050;
+@define-color retrocrt_blue           #4080c0;
+@define-color retrocrt_visual_bg      #1e3a4c;
+@define-color retrocrt_diff_delete_bg #201212;
+
+window#waybar {
+  background-color: @retrocrt_background;
+  color: @retrocrt_foreground;
+}
+
+tooltip {
+  background-color: @retrocrt_background_alt;
+  border-color: @retrocrt_dim;
+  color: @retrocrt_foreground;
+}
+
+/* Workspaces, as the swaybar */
+#workspaces button {
+  background-image: none;
+  box-shadow: none;
+  text-shadow: none;
+  background-color: @retrocrt_background_alt;
+  color: @retrocrt_dim;
+}
+#workspaces button.visible {
+  color: @retrocrt_cyan;
+}
+#workspaces button.focused {
+  background-color: @retrocrt_cyan;
+  color: @retrocrt_background;
+}
+#workspaces button.urgent {
+  background-color: @retrocrt_diff_delete_bg;
+  color: @retrocrt_red;
+}
+#workspaces button:hover {
+  background-color: @retrocrt_visual_bg;
+  color: @retrocrt_foreground;
+}
+
+/* Binding mode = INSERT */
+#mode {
+  background-color: @retrocrt_amber;
+  color: @retrocrt_background;
+}
+
+#window {
+  color: @retrocrt_foreground;
+}
+
+/* Segments */
+#custom-net,
+#custom-audio,
+#cpu,
+#memory,
+#temperature,
+#tray {
+  background-color: @retrocrt_background_alt;
+  color: @retrocrt_foreground;
+}
+
+#custom-net.up,
+#custom-net.wifi {
+  color: @retrocrt_green;
+}
+#custom-net.down {
+  color: @retrocrt_red;
+}
+#custom-audio.muted,
+#custom-audio.none {
+  color: @retrocrt_dim;
+}
+
+#cpu.warning,
+#memory.warning {
+  color: @retrocrt_amber;
+}
+#cpu.critical,
+#memory.critical,
+#temperature.critical {
+  background-color: @retrocrt_red;
+  color: @retrocrt_background;
+}
+
+#tray > .needs-attention {
+  background-color: @retrocrt_diff_delete_bg;
+}
+
+/* Date is informational, as tmux power Z */
+#clock {
+  background-color: @retrocrt_blue;
+  color: @retrocrt_background;
+}

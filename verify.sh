@@ -495,6 +495,118 @@ else
 fi
 
 echo
+echo "=== waybar (FreeBSD bar) ==="
+WC=adapters/waybar/retrocrt.css
+WD=dotfiles/waybar
+if need_hex "$WC" $CANON $VISUAL_BG $DIFF_DELETE_BG; then
+  ok "$WC canonical colors"
+fi
+wb_hex_ok=1
+for h in $(grep -Eo '#[0-9a-fA-F]{6}' "$WC" | tr 'A-F' 'a-f' | sort -u); do
+  if ! grep -Eiq "^[A-Z_]+=${h}\$" palette; then
+    bad "$WC uses $h which is not in palette"
+    wb_hex_ok=0
+  fi
+done
+[ "$wb_hex_ok" -eq 1 ] && ok "$WC hex values are in palette"
+if grep -Eq '^[[:space:]]*(font|padding|margin|border-radius|border-width|min-height|border:)' "$WC"; then
+  bad "waybar adapter sets font/padding/margins/borders"
+else
+  ok "waybar adapter is colors only"
+fi
+grep -q '#workspaces button.focused' "$WC" && grep -A3 '#workspaces button.focused' "$WC" | grep -q 'retrocrt_cyan' \
+  && ok "waybar focused workspace is CYAN" || bad "waybar focused workspace is not CYAN"
+grep -A3 '^#mode' "$WC" | grep -q 'retrocrt_amber' && ok "waybar binding mode is AMBER" || bad "waybar mode is not AMBER"
+grep -A3 '^#clock' "$WC" | grep -q 'retrocrt_blue' && ok "waybar date is BLUE" || bad "waybar clock is not BLUE"
+grep -q '^@import "retrocrt.css";' "$WD/style.css" && ok "waybar style.css imports the adapter" || bad "waybar style.css does not import retrocrt.css"
+
+# config.jsonc: full-line // comments only, so stripping them gives JSON.
+if command -v jq >/dev/null 2>&1; then
+  wbcfg=$(sed 's#^[[:space:]]*//.*$##' "$WD/config.jsonc")
+  if printf '%s\n' "$wbcfg" | jq -e . >/dev/null 2>&1; then
+    ok "waybar config.jsonc is valid JSONC"
+    mods=$(printf '%s\n' "$wbcfg" | jq -r '.["modules-left"][], .["modules-center"][], .["modules-right"][]')
+    # Not built by the FreeBSD port (no libnl) or not for a PC / without a daemon.
+    wb_mod_ok=1
+    for m in network battery pulseaudio wireplumber backlight bluetooth upower systemd-failed-units; do
+      if printf '%s\n' "$mods" | grep -qx "$m"; then
+        bad "waybar config uses $m (not for FreeBSD/PC)"
+        wb_mod_ok=0
+      fi
+    done
+    [ "$wb_mod_ok" -eq 1 ] && ok "waybar modules are FreeBSD-only, no battery (PC)"
+    for m in $mods; do
+      printf '%s\n' "$wbcfg" | jq -e --arg m "$m" 'has($m)' >/dev/null 2>&1 \
+        || { case $m in sway/*|tray|cpu|memory) ;; *) bad "waybar module $m has no settings" ;; esac; }
+    done
+    case $mods in
+      *custom/net*custom/audio*clock*) ok "waybar right: net, audio, ..., date last" ;;
+      *) bad "waybar modules-right order unexpected" ;;
+    esac
+  else
+    bad "waybar config.jsonc is not valid JSONC"
+  fi
+else
+  printf 'SKIP  jq not installed (waybar config.jsonc not parsed)\n'
+fi
+
+# Scripts against fake FreeBSD route(8), ifconfig(8), mixer(8).
+wbf=$(mktemp -d "${TMPDIR:-/tmp}/retrocrt-waybar.XXXXXX")
+wb_tool() { # case name body
+  mkdir -p "$wbf/$1"
+  printf '#!/bin/sh\n%s\n' "$3" > "$wbf/$1/$2"
+  chmod +x "$wbf/$1/$2"
+}
+wb_tool eth route 'printf "   route to: default\n    gateway: 192.168.1.1\n  interface: em0\n"'
+wb_tool eth ifconfig 'printf "em0: flags=8843<UP> mtu 1500\n\tinet 192.168.1.10 netmask 0xffffff00\n\tstatus: active\n"'
+wb_tool eth mixer 'case "$1" in vol.volume) echo vol.volume=0.75:0.75 ;; vol.mute) echo vol.mute=off ;; esac'
+wb_tool wifi route 'printf "  interface: wlan0\n"'
+wb_tool wifi ifconfig 'printf "wlan0: flags=8843<UP> mtu 1500\n\tinet 10.0.0.42 netmask 0xffffff00\n\tssid \"Dom 5G\" channel 36 (5180 MHz 11a) bssid 11:22:33:44:55:66\n"'
+wb_tool wifi mixer 'case "$1" in vol.volume) echo vol.volume=0.30:0.30 ;; vol.mute) echo vol.mute=on ;; esac'
+wb_tool off route 'exit 1'
+wb_tool off ifconfig 'exit 1'
+wb_tool off mixer 'echo "mixer: /dev/mixer: No such file" >&2; exit 1'
+wb_case() { # label case script expected-text expected-class
+  out=$(PATH="$wbf/$2:$PATH" sh "${ROOT}/$WD/scripts/$3")
+  if command -v jq >/dev/null 2>&1; then
+    got=$(printf '%s' "$out" | jq -r '"\(.text)|\(.class)"' 2>/dev/null || echo "invalid JSON: $out")
+  else
+    got=$out
+  fi
+  case $got in
+    "$4|$5"|*"\"text\":\"$4\""*"\"class\":\"$5\""*) ok "waybar $3 $1: $4 ($5)" ;;
+    *) bad "waybar $3 $1: expected '$4|$5' got '$got'" ;;
+  esac
+}
+wb_case "wired"        eth  net   "NET em0 192.168.1.10" up
+wb_case "Wi-Fi"        wifi net   "NET Dom 5G"           wifi
+wb_case "no route"     off  net   "NET --"               down
+wb_case "75%"          eth  audio "VOL 75%"              on
+wb_case "muted"        wifi audio "VOL mute"             muted
+wb_case "no mixer"     off  audio "VOL --"               none
+rm -rf "$wbf"
+[ -x "$WD/scripts/net" ] && [ -x "$WD/scripts/audio" ] && ok "waybar scripts are executable" || bad "waybar scripts are not executable"
+
+# GTK's own CSS parser, as Waybar loads it (needs libgtk-3 and python3).
+if command -v python3 >/dev/null 2>&1 && python3 -I -c 'import ctypes; ctypes.CDLL("libgtk-3.so.0")' >/dev/null 2>&1; then
+  wbcss=$(mktemp -d "${TMPDIR:-/tmp}/retrocrt-waybar-css.XXXXXX")
+  cp "$WC" "$WD/style.css" "$wbcss/"
+  if python3 -I "${ROOT}/testdata/gtk-css-check.py" "$wbcss/style.css" >/dev/null 2>&1; then
+    ok "waybar style.css + retrocrt.css load in GTK 3"
+  else
+    bad "waybar CSS has GTK parse errors: $(python3 -I "${ROOT}/testdata/gtk-css-check.py" "$wbcss/style.css" 2>/dev/null | head -3)"
+  fi
+  rm -rf "$wbcss"
+else
+  printf 'SKIP  libgtk-3 not available (waybar CSS not parsed)\n'
+fi
+if command -v waybar >/dev/null 2>&1; then
+  ok "waybar binary present"
+else
+  printf 'SKIP  waybar not installed (FreeBSD: pkg install waybar)\n'
+fi
+
+echo
 echo "=== sway / mako ==="
 if grep -q 'bindsym\|bindcode\|exec ' adapters/sway/colors adapters/sway/bar adapters/sway/bar-colors; then
   bad "sway adapter contains binds or exec"
