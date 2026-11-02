@@ -255,6 +255,104 @@ else
 fi
 
 echo
+echo "=== tmux power (optional status line) ==="
+TP=adapters/tmux/power.conf
+if grep -Eq '^[[:space:]]*(bind|bind-key|unbind|unbind-key|run|run-shell)[[:space:]]' "$TP"; then
+  bad "$TP contains keybinds or run-shell"
+else
+  ok "$TP has no keybinds or run-shell"
+fi
+# GREEN reaches the bar through the battery script.
+if need_hex "$TP" $BACKGROUND $BACKGROUND_ALT $FOREGROUND $DIM $CYAN $AMBER $MAGENTA $RED $BLUE $VISUAL_BG $DIFF_DELETE_BG; then
+  ok "$TP canonical colors"
+fi
+power_hex_ok=1
+for h in $(grep -Eio '#[0-9a-f]{6}' "$TP" | tr 'A-F' 'a-f' | sort -u); do
+  if ! grep -Eiq "^[A-Z_]+=${h}\$" palette; then
+    bad "$TP uses $h which is not in palette"
+    power_hex_ok=0
+  fi
+done
+[ "$power_hex_ok" -eq 1 ] && ok "$TP hex values are in palette"
+# Uppercase hex breaks inside tmux formats: #D is pane_id, #F window_flags.
+if grep -Eo '#[0-9a-fA-F]{6}' "$TP" | grep -q '[A-F]'; then
+  bad "$TP has uppercase hex (tmux expands #D, #F, ...)"
+else
+  ok "$TP hex is lowercase"
+fi
+if command -v tmux >/dev/null 2>&1; then
+  psock=retrocrt-verify-power
+  pt() { tmux -u -L "$psock" "$@"; }
+  strip_styles() { sed 's/#\[[^]]*\]//g'; }
+  tmux -L "$psock" kill-server >/dev/null 2>&1 || true
+  if ! TMUX= tmux -L "$psock" -f "${ROOT}/adapters/tmux/retrocrt.conf" new-session -d -s verify >/dev/null 2>&1; then
+    bad "tmux failed to start for power"
+  elif ! pt source-file "${ROOT}/$TP" >/dev/null 2>&1; then
+    bad "tmux power.conf failed to source"
+  else
+    ok "tmux sources retrocrt.conf + power.conf"
+    left=$(pt display -p '#{T:status-left}' | strip_styles)
+    case "$left" in
+      *' NORMAL '*' verify '*) ok "power left: NORMAL pill, then session" ;;
+      *) bad "power left unexpected: ${left}" ;;
+    esac
+    case "$(pt show -gv @retrocrt_power_left_c)" in
+      *battery*) ok "power left C is the battery" ;;
+      *) bad "power left C is not the battery" ;;
+    esac
+    right=$(pt display -p '#{T:status-right}' | strip_styles)
+    case "$right" in
+      *"$(date +%Y-%m-%d)"*) ok "power right ends with the date" ;;
+      *) bad "power right unexpected: ${right}" ;;
+    esac
+    case "$(pt display -p '#{T:status-right}')" in
+      *'#[bg=#4080c0]'*) ok "power date is BLUE" ;;
+      *) bad "power date is not BLUE" ;;
+    esac
+    [ "$(pt display -p '#{E:@retrocrt_power_mode_color}')" = "$CYAN" ] \
+      && ok "power NORMAL is CYAN" || bad "power NORMAL is not CYAN"
+    pt set -w synchronize-panes on
+    case "$(pt display -p '#{E:@retrocrt_power_mode}') $(pt display -p '#{E:@retrocrt_power_mode_color}')" in
+      "SYNC $AMBER") ok "power SYNC is AMBER" ;;
+      *) bad "power synchronize-panes not SYNC/AMBER" ;;
+    esac
+    pt set -w synchronize-panes off
+    pt copy-mode
+    case "$(pt display -p '#{E:@retrocrt_power_mode}') $(pt display -p '#{E:@retrocrt_power_mode_color}')" in
+      "COPY $MAGENTA") ok "power COPY is MAGENTA" ;;
+      *) bad "power copy-mode not COPY/MAGENTA" ;;
+    esac
+    pt send-keys -X cancel
+    case "$(pt display -p '#{T:window-status-current-format}')" in
+      *"bg=$CYAN"*) ok "power current window takes the mode color" ;;
+      *) bad "power current window does not take the mode color" ;;
+    esac
+    # Empty B: the pill's separator goes straight onto C (BACKGROUND_ALT).
+    pt set -g @retrocrt_power_left_b ''
+    case "$(pt display -p '#{T:status-left}')" in
+      *"$VISUAL_BG"*) bad "power empty B still draws VISUAL_BG" ;;
+      *"#[fg=$CYAN]#[bg=$BACKGROUND_ALT]"*) ok "power empty section is skipped" ;;
+      *) bad "power empty B: unexpected transition" ;;
+    esac
+    [ "$(pt show -gv @retrocrt_power_sep_right)" = "$(printf '\356\202\260')" ] \
+      && ok "power separator is U+E0B0" || bad "power separator is not U+E0B0"
+  fi
+  tmux -L "$psock" kill-server >/dev/null 2>&1 || true
+  # A section set before sourcing survives (set -o).
+  if TMUX= tmux -L "$psock" -f /dev/null new-session -d -s verify >/dev/null 2>&1; then
+    pt set -g @retrocrt_power_left_b 'PRESET'
+    pt source-file "${ROOT}/$TP" >/dev/null 2>&1 || true
+    case "$(pt display -p '#{T:status-left}' | strip_styles)" in
+      *PRESET*) ok "power keeps a section set before sourcing" ;;
+      *) bad "power overwrote a section set before sourcing" ;;
+    esac
+  fi
+  tmux -L "$psock" kill-server >/dev/null 2>&1 || true
+else
+  printf 'SKIP  tmux not installed\n'
+fi
+
+echo
 echo "=== sway / mako ==="
 if grep -q 'bindsym\|bindcode\|exec ' adapters/sway/colors adapters/sway/bar adapters/sway/bar-colors; then
   bad "sway adapter contains binds or exec"

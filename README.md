@@ -19,7 +19,7 @@ Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main termina
        │                               │
        └─────────── Ghostty ───────────┘
                        │        (foot: fallback, sway's default $term)
-                      tmux
+                      tmux              (power status line: optional)
                        │
                       zsh
                        │
@@ -148,6 +148,25 @@ tmux mapping:
 | battery critical | RED |
 | date | BLUE |
 
+tmux power mapping (optional `adapters/tmux/power.conf`, see TMUX POWER):
+
+| tmux power | Role |
+| --- | --- |
+| mode pill NORMAL | NORMAL / CYAN |
+| mode pill PREFIX, or a key table entered with `switch-client -T` (shown by name) | INSERT / AMBER |
+| mode pill COPY (copy-mode), VIEW (view-mode, choose-tree, clock) | VISUAL / MAGENTA |
+| mode pill SYNC (synchronize-panes) | AMBER |
+| current window | mode color (focus shows the mode) |
+| segments B, Y | VISUAL_BG (raised) |
+| segments C, D, W, X; inactive windows | BACKGROUND_ALT |
+| bar | BACKGROUND (as the swaybar) |
+| segment Z (date) | BLUE |
+| inactive window text | DIM |
+| last window | CYAN text |
+| activity / silence | AMBER text |
+| bell | RED on DIFF_DELETE_BG (as the swaybar urgent workspace) |
+| battery (segment C) | GREEN / AMBER / RED |
+
 Sway mapping:
 
 | Sway | Role |
@@ -187,6 +206,7 @@ HikaruWM mapping:
 | Ghostty | `adapters/ghostty/retrocrt` | main terminal ANSI/theme |
 | foot | `adapters/foot/retrocrt` | fallback terminal (sway's default `$term`; `include=` file) |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
+| tmux power (optional) | `adapters/tmux/power.conf` | powerline status line: mode pill, sections, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 | Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
 | swaybar | `adapters/sway/bar-colors` | workspaces + binding mode |
@@ -217,6 +237,57 @@ Portable on both systems:
 - zshrc battery reads sysfs on Arch and `sysctl` on FreeBSD. Powerlevel10k rebuilds `RPROMPT` on every prompt, so with p10k the battery is a p10k segment (`battery_info`) appended to the right prompt from zshrc; `~/.p10k.zsh` is not edited. p10k's own `battery` segment covers Linux and macOS only.
 - zshrc says what to clone when Oh My Zsh is missing; `PATH` uses `$HOME/.local/bin`.
 
+## TMUX POWER
+
+`adapters/tmux/power.conf` is an optional powerline status line, modeled on [wfxr/tmux-power](https://github.com/wfxr/tmux-power) and rebuilt on this palette. It replaces only the status line; panes, messages, and copy-mode stay with `retrocrt.conf`.
+
+```text
++------+---+---+---+-------- windows --------+---+---+---+---+
+| MODE | B | C | D |  1:zsh   2:nvim  3:yazi  | W | X | Y | Z |
++------+---+---+---+-------------------------+---+---+---+---+
+```
+
+| | tmux-power | retrocrt power |
+| --- | --- | --- |
+| colors | 9 themes or any hex, gradient `g0`–`g4` | this palette only; no theme option |
+| accent | one theme color | mode color: NORMAL CYAN, PREFIX AMBER, COPY MAGENTA, SYNC AMBER |
+| prefix / copy indicator | tmux-prefix-highlight plugin | built-in mode pill (section A) |
+| implementation | bash script via `run-shell` / TPM | static tmux formats, `source-file`, no script |
+| options | set before loading | set before or after (read when the bar is drawn) |
+| defaults | `user@host`, session; time, date | mode, session, battery; time, date |
+
+Sections are tmux formats (`#S`, `#h`, `%H:%M`, `#(cmd)`); `''` hides one and the arrows close over it. A thin separator divides two shown segments on the same surface (C|D, W|X).
+
+| Option | Default | Surface |
+| --- | --- | --- |
+| `@retrocrt_power_mode` | NORMAL / PREFIX / table name / COPY / VIEW / SYNC | mode color |
+| `@retrocrt_power_left_b` | `#S` | VISUAL_BG |
+| `@retrocrt_power_left_c` | battery script | BACKGROUND_ALT |
+| `@retrocrt_power_left_d` | `''` | BACKGROUND_ALT |
+| `@retrocrt_power_right_w` | `''` | BACKGROUND_ALT |
+| `@retrocrt_power_right_x` | `''` | BACKGROUND_ALT |
+| `@retrocrt_power_right_y` | `%H:%M` | VISUAL_BG |
+| `@retrocrt_power_right_z` | `%Y-%m-%d` | BLUE |
+| `@retrocrt_power_window` | `#I:#W#F` | window text |
+| `@retrocrt_power_sep_right` / `_left` | U+E0B0 / U+E0B2 | |
+| `@retrocrt_power_sep_right_thin` / `_left_thin` | U+E0B1 / U+E0B3 | |
+
+```tmux
+# ~/.tmux.conf
+source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
+source-file ~/.config/retrocrt/adapters/tmux/power.conf
+set -g @retrocrt_power_left_d  '#{USER}@#h'       # host on the left, after the battery
+set -g @retrocrt_power_right_x '#{pane_current_command}'
+set -g @retrocrt_power_sep_right '' # flat blocks, no Nerd Font needed
+set -g @retrocrt_power_sep_left  ''
+```
+
+Notes:
+
+- A key table entered from the command line (`tmux switch-client -T name`) shows at the next redraw; from a key binding (`bind -n M-r switch-client -T resize`) it shows at once.
+- TPM plugins that rewrite tokens such as `#{battery_percentage}` inside `status-left`/`status-right` do not see the tokens in the sections. Put the plugin's `#(script)` in the section instead.
+- After `tmux source ~/.tmux.conf`, a section removed from your config keeps its last value until the server restarts (`set -o` keeps set values). Set it to `''` to hide it.
+
 ## RULES
 
 How a new application should consume retrocrt:
@@ -236,6 +307,8 @@ Known deviation: foot, like Ghostty, has a single background; `BACKGROUND_ALT` i
 Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
 
 Known deviation: Hikaru has one `color-urgent` key for both urgent views and non-NORMAL modes (resize), so it is AMBER, not RED as in Sway. Hikaru draws no bar or titlebar and `color-*` accepts only `#rrggbb`. A personal `~/.config/mako/config` replaces Hikaru's shipped mako layout entirely; the retrocrt mako adapter is colors only, so re-add font/size/anchor keys if needed. waylock has no config file, so its flags live in `hikaru-lock`; the adapter documents them but `install.sh` does not edit that script.
+
+Known deviation: tmux power uses `VISUAL_BG` as the raised segment surface (B, Y) as well as for copy-mode selection; the palette has no other mid-tone between `BACKGROUND_ALT` and the accents. Its bar is `BACKGROUND` (like the swaybar), not `BACKGROUND_ALT` as in the flat `retrocrt.conf`. `GREEN` reaches it only through the battery. Separators are Powerline glyphs from the Nerd Font in `--packages`; set them to `''` for flat blocks.
 
 Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unused there. waybar / wofi / fuzzel are not Sway's own programs; add them later as separate adapters.
 
@@ -280,6 +353,8 @@ include ~/.config/retrocrt/adapters/sway/colors
 ```tmux
 # ~/.tmux.conf
 source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
+# optional powerline status line (after retrocrt.conf):
+# source-file ~/.config/retrocrt/adapters/tmux/power.conf
 ```
 
 Without `--dotfiles`, also:
@@ -336,6 +411,7 @@ yazi
 # Ghostty: theme = retrocrt
 # zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion; battery on the right
 # tmux: battery left, date right; copy-mode MAGENTA
+# tmux power: pill CYAN NORMAL; prefix AMBER PREFIX; copy-mode MAGENTA COPY; arrows close over empty sections
 # sway: set $term ghostty; include adapters/sway/colors; reload
 # mako: makoctl reload
 # swaylock / swaynag: configs in ~/.config/

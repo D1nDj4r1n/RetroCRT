@@ -16,6 +16,7 @@
       --red: #e05050;
       --blue: #4080c0;
       --visual: #1e3a4c;
+      --urgent: #201212;
     }
     * { box-sizing: border-box; }
     body {
@@ -53,6 +54,20 @@
     .c-blue { color: var(--blue); }
     .c-dim { color: var(--dim); }
     .sel { background: var(--visual); }
+    /* tmux power mock: <i> cells are Powerline separators drawn with clip-path */
+    .tbar { --mode: var(--cyan); display: flex; white-space: pre; background: var(--bg); border: 1px solid var(--bg-alt); margin: 6px 0; overflow: hidden; }
+    .tbar span { padding: 0 1ch; }
+    .tbar i { flex: none; width: 1.1ch; position: relative; background: var(--b); }
+    .tbar i::before { content: ""; position: absolute; inset: 0; background: var(--f); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+    .tbar i.l::before { clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+    .tbar .gap { flex: 1; padding: 0; }
+    .tbar .pill, .tbar .cur { background: var(--mode); color: var(--bg); font-weight: 700; }
+    .tbar .raise { background: var(--visual); }
+    .tbar .inner { background: var(--bg-alt); }
+    .tbar .bell { background: var(--urgent); }
+    .tbar .date { background: var(--blue); color: var(--bg); font-weight: 700; }
+    .fm { --f: var(--mode); } .fv { --f: var(--visual); } .fi { --f: var(--bg-alt); } .fb { --f: var(--bg); } .fd { --f: var(--blue); } .fu { --f: var(--urgent); }
+    .bm { --b: var(--mode); } .bv { --b: var(--visual); } .bi { --b: var(--bg-alt); } .bb { --b: var(--bg); } .bu { --b: var(--urgent); }
   </style>
 </head>
 <body>
@@ -90,6 +105,13 @@
 <span class="c-cyan">end</span>
 <span class="sel">visual selection</span>   <span class="c-red">error</span>  <span class="c-green">ok</span>
 </div>
+
+  <h2>tmux power</h2>
+  <p class="dim">Optional <code>adapters/tmux/power.conf</code>. Mode pill and current window take the mode color; last window CYAN, activity AMBER, bell RED.</p>
+  <div class="tbar" style="--mode:var(--cyan)"><span class="pill">NORMAL</span><i class="fm bv"></i><span class="raise">work</span><i class="fv bi"></i><span class="inner c-green">BAT 87%</span><i class="fi bb"></i><i class="fb bm"></i><span class="cur">0:zsh*</span><i class="fm bb"></i><i class="fb bi"></i><span class="inner c-cyan">1:nvim-</span><i class="fi bb"></i><i class="fb bi"></i><span class="inner c-amber">2:yazi#</span><i class="fi bb"></i><i class="fb bu"></i><span class="bell c-red">3:htop!</span><i class="fu bb"></i><span class="gap"></span><i class="l fv bb"></i><span class="raise">11:45</span><i class="l fd bv"></i><span class="date">2026-11-02</span></div>
+  <div class="tbar" style="--mode:var(--amber)"><span class="pill">PREFIX</span><i class="fm bv"></i><span class="raise">work</span><i class="fv bi"></i><span class="inner c-green">BAT 87%</span><i class="fi bb"></i><i class="fb bm"></i><span class="cur">0:zsh*</span><i class="fm bb"></i><i class="fb bi"></i><span class="inner c-cyan">1:nvim-</span><i class="fi bb"></i><i class="fb bi"></i><span class="inner c-amber">2:yazi#</span><i class="fi bb"></i><i class="fb bu"></i><span class="bell c-red">3:htop!</span><i class="fu bb"></i><span class="gap"></span><i class="l fv bb"></i><span class="raise">11:45</span><i class="l fd bv"></i><span class="date">2026-11-02</span></div>
+  <div class="tbar" style="--mode:var(--magenta)"><span class="pill">COPY</span><i class="fm bv"></i><span class="raise">work</span><i class="fv bi"></i><span class="inner c-green">BAT 87%</span><i class="fi bb"></i><i class="fb bm"></i><span class="cur">0:zsh*</span><i class="fm bb"></i><i class="fb bi"></i><span class="inner c-cyan">1:nvim-</span><i class="fi bb"></i><i class="fb bi"></i><span class="inner c-amber">2:yazi#</span><i class="fi bb"></i><i class="fb bu"></i><span class="bell c-red">3:htop!</span><i class="fu bb"></i><span class="gap"></span><i class="l fv bb"></i><span class="raise">11:45</span><i class="l fd bv"></i><span class="date">2026-11-02</span></div>
+  <div class="tbar" style="--mode:var(--amber)"><span class="pill">SYNC</span><i class="fm bv"></i><span class="raise">work</span><i class="fv bi"></i><span class="inner c-green">BAT 87%</span><i class="fi bb"></i><i class="fb bm"></i><span class="cur">0:zsh*</span><i class="fm bb"></i><i class="fb bi"></i><span class="inner c-cyan">1:nvim-</span><i class="fi bb"></i><i class="fb bi"></i><span class="inner c-amber">2:yazi#</span><i class="fi bb"></i><i class="fb bu"></i><span class="bell c-red">3:htop!</span><i class="fu bb"></i><span class="gap"></span><i class="l fv bb"></i><span class="raise">11:45</span><i class="l fd bv"></i><span class="date">2026-11-02</span></div>
 
   <h2>Semantic roles</h2>
   <table>
