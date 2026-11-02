@@ -17,7 +17,8 @@ install.sh [options]
   --copy         copy palette, README, adapters, and dotfiles to $DEST
   --dotfiles     also install dotfiles/: ~/.vimrc, ~/.zshrc, and the Neovim
                  config (init.lua, lua/config, lua/plugins, after/ftplugin);
-                 on FreeBSD also Waybar (config.jsonc, style.css, scripts/)
+                 on FreeBSD also the Projekt Blackwall Waybar
+                 (~/.config/waybar: config, modules, menus, scripts, style)
   --packages     print the package and git clone commands for this system, then exit
   --hikaru-conf  rewrite the five color-* lines in ~/.config/hikaru/hikaru.conf
                  (optional HikaruWM; timestamped backup; only if the file exists)
@@ -35,7 +36,6 @@ Installs visual adapters:
   Yazi theme.toml, Kitty theme, Ghostty and foot themes, zsh color fragment, tmux styles
   (+ powerline status line),
   Sway colors, mako, swaylock, swaynag, HikaruWM colors;
-  on FreeBSD the Waybar colors (Arch keeps swaybar).
   Sway colors are included, not a full sway config.
 
 Existing files are moved to <name>.bak.<timestamp> before they are replaced.
@@ -91,7 +91,7 @@ EOF
 # FreeBSD (as root). Sway needs seatd and the video group (FreeBSD Handbook,
 # Wayland chapter). XDG_RUNTIME_DIR is set automatically since FreeBSD 14.1.
 pkg install sway swaylock swayidle swaybg mako kitty foot wl-clipboard seatd drm-kmod \\
-    waybar tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
+    waybar libnotify tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
 sysrc seatd_enable=YES
 service seatd start
 pw groupmod video -m $user
@@ -274,11 +274,6 @@ if [ "$HIKARU_CONF" -eq 1 ]; then
   apply_hikaru_colors
 fi
 
-# Waybar is the FreeBSD bar (Arch keeps swaybar): colors on FreeBSD only.
-if [ "$SYSTEM" = freebsd ]; then
-  link_or_copy "$DEST/adapters/waybar/retrocrt.css" "$HOME/.config/waybar/retrocrt.css"
-fi
-
 # Dotfiles (opt-in): your vimrc, zshrc, and Neovim config from dotfiles/.
 # Neovim gets per-directory links so ~/.config/nvim/lua stays a real directory
 # for the adapter's retrocrt.lua and for anything else you keep there.
@@ -291,10 +286,18 @@ if [ "$DOTFILES" -eq 1 ]; then
   link_or_copy "$DEST/dotfiles/nvim/lua/plugins" "$HOME/.config/nvim/lua/plugins"
   link_or_copy "$DEST/dotfiles/nvim/after/ftplugin" "$HOME/.config/nvim/after/ftplugin"
   link_or_copy "$DEST/dotfiles/zsh/zshrc" "$HOME/.zshrc"
+  # Projekt Blackwall Waybar: FreeBSD only (Arch keeps swaybar).
   if [ "$SYSTEM" = freebsd ]; then
-    link_or_copy "$DEST/dotfiles/waybar/config.jsonc" "$HOME/.config/waybar/config.jsonc"
-    link_or_copy "$DEST/dotfiles/waybar/style.css" "$HOME/.config/waybar/style.css"
-    link_or_copy "$DEST/dotfiles/waybar/scripts" "$HOME/.config/waybar/scripts"
+    for f in config.jsonc style.css modules menus scripts; do
+      link_or_copy "$DEST/dotfiles/waybar/$f" "$HOME/.config/waybar/$f"
+    done
+    # Icons only with a Nerd Font; without icons.jsonc the bar uses text.
+    if command -v fc-list > /dev/null 2>&1 && fc-list : family 2> /dev/null | grep -qi 'nerd font'; then
+      link_or_copy "$DEST/dotfiles/waybar/icons.jsonc" "$HOME/.config/waybar/icons.jsonc"
+      WAYBAR_ICONS=yes
+    else
+      WAYBAR_ICONS=no
+    fi
   fi
 fi
 
@@ -322,10 +325,21 @@ else
   echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
 fi
 echo
-if [ "$SYSTEM" = freebsd ] && [ "$DOTFILES" -eq 0 ]; then
-  echo "  waybar, FreeBSD (~/.config/waybar/style.css, first line):"
-  echo "    @import \"retrocrt.css\";"
-  echo "    (or ./install.sh --dotfiles for the retrocrt config.jsonc and scripts)"
+if [ "$SYSTEM" = freebsd ]; then
+  echo "  waybar (Projekt Blackwall), FreeBSD:"
+  if [ "$DOTFILES" -eq 0 ]; then
+    echo "    ./install.sh --dotfiles installs it into ~/.config/waybar"
+  else
+    if [ "${WAYBAR_ICONS:-no}" = yes ]; then
+      echo "    Nerd Font found: icons.jsonc installed (icons)"
+    else
+      echo "    no Nerd Font: icons.jsonc not installed (text labels);"
+      echo "    pkg install nerd-fonts-jetbrainsmono, then run --dotfiles again"
+    fi
+  fi
+  echo "    iced-bar (C, kqueue): make -C ${DEST}/dotfiles/waybar/iced-bar test install"
+  echo "    until then the ICE modules use scripts/iced-bar.sh (polls every 5 s)"
+  echo "    reload without logging out: pkill -USR2 -x waybar"
   echo
 fi
 echo "  tmux (~/.tmux.conf):"

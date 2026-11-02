@@ -1,26 +1,20 @@
 #!/bin/sh
-# retrocrt — Waybar volume for FreeBSD (custom/audio).
-# OSS through mixer(8) from the base system (FreeBSD 14+ syntax); no
-# PulseAudio or sndiod needed. Prints one line of Waybar JSON;
-# class: on, muted, or none (no mixer).
+# Volume through OSS mixer(8) from the base system (FreeBSD 14+ syntax);
+# no PulseAudio, PipeWire or sndiod. Click mutes, scroll +-5% (config).
+# Class: zielony on, off muted or no mixer.
+. "$(dirname -- "$0")/lib.sh"
 
-vol=$(mixer vol.volume 2>/dev/null)   # vol.volume=0.75:0.75
-mute=$(mixer vol.mute 2>/dev/null)    # vol.mute=off
-
+vol=$(mixer vol.volume 2> /dev/null)   # vol.volume=0.75:0.75
+mute=$(mixer vol.mute 2> /dev/null)    # vol.mute=off
 case $vol in
-  vol.volume=*) ;;
-  *)
-    printf '{"text":"VOL --","tooltip":"no mixer","class":"none"}\n'
-    exit 0
-    ;;
+  vol.volume=[0-9]*) ;;
+  *) emit '--' off 'Dźwięk: brak miksera OSS (mixer vol)'; exit 0 ;;
 esac
-
 left=${vol#*=}
 left=${left%%:*}
 pct=$(printf '%s\n' "$left" | awk '{ printf "%d", $1 * 100 + 0.5 }')
-
 if [ "$mute" = vol.mute=on ]; then
-  printf '{"text":"VOL mute","tooltip":"vol %s%% (muted)","class":"muted","percentage":%s}\n' "$pct" "$pct"
+  emit 'mute' off "Dźwięk: wyciszony ($pct%)" "$pct"
 else
-  printf '{"text":"VOL %s%%","tooltip":"vol %s%%","class":"on","percentage":%s}\n' "$pct" "$pct" "$pct"
+  emit "$pct%" zielony "Dźwięk: $pct% (OSS, mixer vol)" "$pct"
 fi

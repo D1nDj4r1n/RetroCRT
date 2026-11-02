@@ -1,0 +1,48 @@
+// Everyday modules. All local; the ZFS check runs once a minute without root.
+{
+  // Local time on the bar; UTC (project logs) and ISO date in the tooltip.
+  // Scrolling switches the bar between local time and UTC.
+  "clock": {
+    "interval": 60,
+    "format": "{:%H:%M}",
+    "timezones": ["", "Etc/UTC"],
+    "timezone-tooltip-format": "UTC      {:%Y-%m-%dT%H:%MZ}",
+    "tooltip-format": "lokalnie {:%Y-%m-%d %H:%M %Z}\n{tz_list}"
+  },
+  "cpu": {
+    "interval": 5,
+    "format": "CPU {usage}%",
+    "states": { "warning": 70, "critical": 90 }
+  },
+  "memory": {
+    "interval": 10,
+    "format": "MEM {percentage}%",
+    "tooltip-format": "{used:0.1f} / {total:0.1f} GiB",
+    "states": { "warning": 80, "critical": 95 }
+  },
+  // sysctl dev.cpu.0.temperature (kld coretemp/amdtemp) or hw.acpi.thermal.
+  // Arguments: sensor number, warning and critical degrees.
+  "custom/temp": {
+    "exec": "~/.config/waybar/scripts/temp 0 70 85",
+    "return-type": "json",
+    "interval": 10,
+    "format": "TMP {}"
+  },
+  // OSS mixer(8): click mutes, scroll +-5%; the script runs again after each.
+  "custom/audio": {
+    "exec": "~/.config/waybar/scripts/audio",
+    "return-type": "json",
+    "interval": 5,
+    "format": "VOL {}",
+    "on-click": "mixer vol.mute=toggle",
+    "on-scroll-up": "mixer vol.volume=+5%",
+    "on-scroll-down": "mixer vol.volume=-5%"
+  },
+  "custom/zfs": {
+    "exec": "~/.config/waybar/scripts/zfs",
+    "return-type": "json",
+    "interval": 60,
+    "escape": true,
+    "format": "{}"
+  }
+}

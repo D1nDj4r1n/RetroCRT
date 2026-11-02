@@ -1,0 +1,37 @@
+// ICE and Blackwall. Both run continuously and print one JSON line per change:
+// iced-bar (C, kqueue, no polling) when installed, else scripts/iced-bar.sh.
+// The state files are untrusted: "escape" makes Waybar escape Pango markup in
+// text and tooltip as well (the JSON is already escaped by the program).
+// Clicks and menu items run fixed commands; nothing from the files reaches them.
+{
+  "custom/ice": {
+    "exec": "~/.config/waybar/scripts/ice-exec",
+    "return-type": "json",
+    "restart-interval": 5,
+    "exec-on-event": false,
+    "escape": true,
+    "format": "ICE {}",
+    "on-click": "~/.config/waybar/scripts/ice-action tui",
+    // Only actions that raise protection; lowering it is done in iced-tui.
+    "menu": "on-click-right",
+    "menu-file": "~/.config/waybar/menus/ice.xml",
+    "menu-actions": {
+      "raise": "~/.config/waybar/scripts/ice-action raise",
+      "snapshot": "~/.config/waybar/scripts/ice-action snapshot"
+    }
+  },
+
+  "custom/blackwall": {
+    "exec": "~/.config/waybar/scripts/ice-exec --blackwall",
+    "return-type": "json",
+    "restart-interval": 5,
+    "exec-on-event": false,
+    "escape": true,
+    "format": "{}",
+    "menu": "on-click-right",
+    "menu-file": "~/.config/waybar/menus/blackwall.xml",
+    "menu-actions": {
+      "slide": "~/.config/waybar/scripts/blackwall-slide"
+    }
+  }
+}

@@ -1,71 +1,30 @@
-// retrocrt — Waybar for FreeBSD (Sway). Arch keeps swaybar.
-// Installed as ~/.config/waybar/config.jsonc by ./install.sh --dotfiles on FreeBSD.
-// Sway runs it from ~/.config/sway/config:   bar { swaybar_command waybar }
-//
-// Only modules the FreeBSD port builds and that need no daemon:
-//   network  -> custom/net   (the port builds Waybar without libnl/netlink)
-//   audio    -> custom/audio (OSS mixer(8) from base; no PulseAudio/sndiod)
-//   battery  -> none         (the FreeBSD machine is a PC; see README "Laptop or PC")
-// Labels are text, as the tmux battery (BAT 87%): no icon font needed.
+// Projekt Blackwall - Waybar on Forteca (FreeBSD 15, sway, one monitor).
+// Base file: the bar and the order of modules. Module settings come from the
+// include files; for each key the first definition wins, so icons.jsonc
+// (installed only when a Nerd Font is present) overrides the text formats in
+// modules/*.jsonc. A missing include is only a warning.
+// Waybar 0.15.0 from ports: "include" since 0.9.8, "menu" since 0.10.4.
+// No window title and nothing that talks to the internet.
 {
   "layer": "top",
   "position": "top",
+  "height": 26,
   "spacing": 0,
+  "reload_style_on_change": true,
 
-  "modules-left": ["sway/workspaces", "sway/mode"],
-  "modules-center": ["sway/window"],
-  "modules-right": ["custom/net", "custom/audio", "cpu", "memory", "temperature", "tray", "clock"],
+  "include": [
+    "~/.config/waybar/icons.jsonc",
+    "~/.config/waybar/modules/ice.jsonc",
+    "~/.config/waybar/modules/sway.jsonc",
+    "~/.config/waybar/modules/net.jsonc",
+    "~/.config/waybar/modules/system.jsonc"
+  ],
 
-  "sway/workspaces": {
-    "disable-scroll": true,
-    "format": "{name}"
-  },
-  // Binding mode by name (resize, ...), as the tmux key table
-  "sway/mode": {
-    "format": "{}"
-  },
-  "sway/window": {
-    "max-length": 60
-  },
-
-  "custom/net": {
-    "exec": "~/.config/waybar/scripts/net",
-    "return-type": "json",
-    "escape": true,
-    "interval": 10
-  },
-  // Click mutes, scroll changes the volume; the script runs again after each.
-  "custom/audio": {
-    "exec": "~/.config/waybar/scripts/audio",
-    "return-type": "json",
-    "interval": 5,
-    "on-click": "mixer vol.mute=toggle",
-    "on-scroll-up": "mixer vol.volume=+5%",
-    "on-scroll-down": "mixer vol.volume=-5%"
-  },
-
-  "cpu": {
-    "interval": 5,
-    "format": "CPU {usage}%",
-    "states": { "warning": 70, "critical": 90 }
-  },
-  "memory": {
-    "interval": 10,
-    "format": "MEM {percentage}%",
-    "states": { "warning": 80, "critical": 95 }
-  },
-  // dev.cpu.0.temperature (kld coretemp or amdtemp), else hw.acpi.thermal.tz0
-  "temperature": {
-    "thermal-zone": 0,
-    "critical-threshold": 80,
-    "format": "TMP {temperatureC}°C"
-  },
-  "tray": {
-    "spacing": 8
-  },
-  "clock": {
-    "interval": 30,
-    "format": "{:%Y-%m-%d %H:%M}",
-    "tooltip-format": "{:%A %d %B %Y}"
-  }
+  "modules-left": ["custom/ice", "custom/blackwall", "sway/workspaces", "sway/mode"],
+  "modules-center": ["clock"],
+  "modules-right": [
+    "custom/link", "custom/vpn", "custom/zfs",
+    "cpu", "memory", "custom/temp",
+    "custom/audio", "sway/language", "idle_inhibitor"
+  ]
 }

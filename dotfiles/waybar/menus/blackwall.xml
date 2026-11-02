@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Blackwall right-click menu: leave the Tails session, then lock. -->
+<interface>
+  <object class="GtkMenu" id="menu">
+    <child>
+      <object class="GtkMenuItem" id="slide">
+        <property name="label">Slide (wyjście z sesji i blokada)</property>
+      </object>
+    </child>
+  </object>
+</interface>

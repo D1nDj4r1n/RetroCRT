@@ -1,0 +1,27 @@
+#!/bin/sh
+# CPU temperature via sysctl(8): dev.cpu.N.temperature (kld coretemp or
+# amdtemp, from kld_list), else hw.acpi.thermal.tzN.temperature. Waybar's own
+# temperature module stops the bar when neither exists; this one shows off.
+# Usage: temp [N] [WARN] [CRIT]   (defaults 0 70 85, degrees Celsius)
+. "$(dirname -- "$0")/lib.sh"
+
+n=${1:-0} warn=${2:-70} crit=${3:-85}
+case $n$warn$crit in *[!0-9]*) emit '--' off 'Temperatura: złe argumenty'; exit 0 ;; esac
+
+src=dev.cpu.$n.temperature
+v=$(sysctl -n "$src" 2> /dev/null)
+if [ -z "$v" ]; then
+  src=hw.acpi.thermal.tz$n.temperature
+  v=$(sysctl -n "$src" 2> /dev/null)
+fi
+case $v in
+  [0-9]*C) ;;
+  *) emit '--' off 'Temperatura: brak czujnika (kld_list: coretemp lub amdtemp)'; exit 0 ;;
+esac
+t=${v%C}
+t=${t%%.*}
+case $t in ''|*[!0-9]*) emit '--' off "Temperatura: nieznany format ($src)"; exit 0 ;; esac
+if [ "$t" -ge "$crit" ]; then cls=czerwony
+elif [ "$t" -ge "$warn" ]; then cls=zolty
+else cls=zielony; fi
+emit "${t}°C" "$cls" "CPU: $v ($src)" "$t"
