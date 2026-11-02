@@ -7,6 +7,6 @@
 # set -g @retrocrt_battery off    # PC: never shown, never read
 
 source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
-
-# Optional powerline status line (mode pill, sections). After retrocrt.conf.
-# source-file ~/.config/retrocrt/adapters/tmux/power.conf
+# Powerline status line (mode pill, arrows), after retrocrt.conf.
+# Leave this line out for the flat status line.
+source-file ~/.config/retrocrt/adapters/tmux/power.conf

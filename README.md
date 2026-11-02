@@ -19,7 +19,7 @@ Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main termina
        │                               │
        └──────────── Kitty ────────────┘
                        │        (foot: fallback, sway's default $term; Ghostty: optional)
-                      tmux              (power status line: optional)
+                      tmux              (powerline status line: power.conf)
                        │
                       zsh
                        │
@@ -240,7 +240,7 @@ HikaruWM mapping:
 | Ghostty (optional) | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
 | foot | `adapters/foot/retrocrt` | fallback terminal (sway's default `$term`; `include=` file) |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
-| tmux power (optional) | `adapters/tmux/power.conf` | powerline status line: mode pill, sections, battery left, date right |
+| tmux power | `adapters/tmux/power.conf` | powerline status line (default look): mode pill, sections, battery left, date right |
 | zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
 | Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
 | swaybar | `adapters/sway/bar-colors` | workspaces + binding mode |
@@ -273,7 +273,7 @@ Portable on both systems:
 
 ## TMUX POWER
 
-`adapters/tmux/power.conf` is an optional powerline status line, modeled on [wfxr/tmux-power](https://github.com/wfxr/tmux-power) and rebuilt on this palette. It replaces only the status line; panes, messages, and copy-mode stay with `retrocrt.conf`.
+`adapters/tmux/power.conf` is the powerline status line (the default look; leave its `source-file` line out for the flat bar of `retrocrt.conf`), modeled on [wfxr/tmux-power](https://github.com/wfxr/tmux-power) and rebuilt on this palette. It replaces only the status line; panes, messages, and copy-mode stay with `retrocrt.conf`.
 
 ```text
 +------+---+---+---+-------- windows --------+---+---+---+---+
@@ -322,7 +322,20 @@ Notes:
 - A key table entered from the command line (`tmux switch-client -T name`) shows at the next redraw; from a key binding (`bind -n M-r switch-client -T resize`) it shows at once.
 - TPM plugins that rewrite tokens such as `#{battery_percentage}` inside `status-left`/`status-right` do not see the tokens in the sections. Put the plugin's `#(script)` in the section instead.
 - After `tmux source ~/.tmux.conf`, a section removed from your config keeps its last value until the server restarts (`set -o` keeps set values). Set it to `''` to hide it.
-- A client without a UTF-8 locale (FreeBSD `vt` console, `LANG=C`) gets flat blocks and `|` instead of `_` for every glyph. Arch and FreeBSD (13+) default to UTF-8 locales.
+- A client that tmux does not see as UTF-8 gets flat blocks and `|` instead of `_` for every glyph. tmux decides from `LC_ALL` / `LC_CTYPE` / `LANG`, not from the terminal; `retrocrt.conf` also declares Kitty as UTF-8 (`terminal-features xterm-kitty:utf8`, read by tmux 3.8+).
+
+Flat bar instead of the powerline one? Check in tmux:
+
+```sh
+tmux show -gv @retrocrt_power_mode >/dev/null 2>&1 && echo power || echo flat
+tmux display -p 'utf8=#{client_utf8} term=#{client_termname} tmux=#{version}'
+```
+
+| You see | Cause | Fix |
+| --- | --- | --- |
+| `flat` | `power.conf` is not sourced | add its `source-file` line after `retrocrt.conf`, then `tmux source ~/.tmux.conf` |
+| `power`, `utf8=0` | tmux sees no UTF-8 | tmux 3.8+ in Kitty: detach and attach again (features apply on attach); older tmux: a UTF-8 `LANG` (Arch `/etc/locale.conf`) or `tmux -u` |
+| `power`, `utf8=1`, boxes instead of arrows | no font has U+E0B0 | install the Nerd Font from `./install.sh --packages` |
 
 ## RULES
 
@@ -391,8 +404,8 @@ include ~/.config/retrocrt/adapters/sway/colors
 # ~/.tmux.conf — the same on Arch Linux and FreeBSD
 # set -g @retrocrt_battery on    # laptop; off on a PC; default auto
 source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
-# optional powerline status line (after retrocrt.conf):
-# source-file ~/.config/retrocrt/adapters/tmux/power.conf
+# powerline status line, after retrocrt.conf (leave out for the flat bar):
+source-file ~/.config/retrocrt/adapters/tmux/power.conf
 ```
 
 Without `--dotfiles`, also:
