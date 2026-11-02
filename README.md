@@ -41,7 +41,8 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 | seat for Sway | logind (systemd) | `seatd` service + user in `video` group |
 | `XDG_RUNTIME_DIR` | set by logind | set automatically since FreeBSD 14.1 |
 | GPU | kernel driver | `drm-kmod` + `kld_list` (`i915kms`, `amdgpu`, `radeonkms`) |
-| battery (tmux, zsh prompt) | `/sys/class/power_supply/BAT*` | `sysctl hw.acpi.battery.*` |
+| battery (tmux, zsh prompt) | `/sys/class/power_supply/`: tmux takes a type Battery that is not scope Device (mouse, gamepad); zsh `BAT*` | `sysctl hw.acpi.battery.*`; a PC without an ACPI battery has no such node |
+| tmux | 3.4 or newer; since 3.7 the prompt needs `fill`, which `retrocrt.conf` sets | same (ports: 3.8) |
 | Vim system clipboard | `+clipboard` in `vim --version` (`gvim` has it): native; otherwise the `wl-copy` fallback | console `vim` has no `+clipboard`: `wl-copy` fallback; `vim-gtk3` has it |
 
 ```sh
@@ -51,6 +52,23 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, ghostty, foot, wl-clipboard, tmux, zsh, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems (FreeBSD has no Powerlevel10k port).
 
 FreeBSD steps, from the Handbook's Wayland chapter: `sysrc seatd_enable=YES`, `service seatd start`, `pw groupmod video -m <user>`.
+
+### Laptop or PC
+
+The battery is the only thing that differs between a laptop and a PC. tmux (both `retrocrt.conf` and `power.conf`) reads one option, in `~/.tmux.conf`, before or after the `source-file` lines:
+
+| `@retrocrt_battery` | Machine | tmux |
+| --- | --- | --- |
+| `auto` (default) | any | battery shown only if the machine has one |
+| `on` | laptop (e.g. Arch) | always shown; `BAT --` in DIM if none is found |
+| `off` | PC (e.g. FreeBSD desktop) | never shown, the script is never run |
+
+```tmux
+set -g @retrocrt_battery on    # laptop
+set -g @retrocrt_battery off   # PC
+```
+
+`auto` already does the right thing on both; `on` / `off` pin it. `./install.sh` says which one this machine looks like. The zsh prompt needs no option: `battery_info` shows nothing when there is no battery.
 
 Sway: copy the default config, change its terminal line to `set $term ghostty` (the default is `foot`), then `include` the retrocrt colors (see INSTALL).
 
@@ -256,21 +274,22 @@ Portable on both systems:
 | options | set before loading | set before or after (read when the bar is drawn) |
 | defaults | `user@host`, session; time, date | mode, session, battery; time, date |
 
-Sections are tmux formats (`#S`, `#h`, `%H:%M`, `#(cmd)`); `''` hides one and the arrows close over it. A thin separator divides two shown segments on the same surface (C|D, W|X).
+Sections are tmux formats (`#S`, `#h`, `%H:%M`, `#(cmd)`); `''` hides one and the arrows close over it, and so does a section that renders empty (the battery on a PC, a `#(cmd)` with no output). A thin separator divides two shown segments on the same surface (C|D, W|X).
 
 | Option | Default | Surface |
 | --- | --- | --- |
 | `@retrocrt_power_mode` | NORMAL / PREFIX / table name / COPY / VIEW / SYNC | mode color |
+| `@retrocrt_battery` | `auto` (laptop `on`, PC `off`; see SYSTEMS) | |
 | `@retrocrt_power_left_b` | `#S` | VISUAL_BG |
-| `@retrocrt_power_left_c` | battery script | BACKGROUND_ALT |
+| `@retrocrt_power_left_c` | battery script, per `@retrocrt_battery` | BACKGROUND_ALT |
 | `@retrocrt_power_left_d` | `''` | BACKGROUND_ALT |
 | `@retrocrt_power_right_w` | `''` | BACKGROUND_ALT |
 | `@retrocrt_power_right_x` | `''` | BACKGROUND_ALT |
 | `@retrocrt_power_right_y` | `%H:%M` | VISUAL_BG |
 | `@retrocrt_power_right_z` | `%Y-%m-%d` | BLUE |
 | `@retrocrt_power_window` | `#I:#W#F` | window text |
-| `@retrocrt_power_sep_right` / `_left` | U+E0B0 / U+E0B2 | |
-| `@retrocrt_power_sep_right_thin` / `_left_thin` | U+E0B1 / U+E0B3 | |
+| `@retrocrt_power_sep_right` / `_left` | U+E0B0 / U+E0B2; none without UTF-8 | |
+| `@retrocrt_power_sep_right_thin` / `_left_thin` | U+E0B1 / U+E0B3; `\|` without UTF-8 | |
 
 ```tmux
 # ~/.tmux.conf
@@ -287,6 +306,7 @@ Notes:
 - A key table entered from the command line (`tmux switch-client -T name`) shows at the next redraw; from a key binding (`bind -n M-r switch-client -T resize`) it shows at once.
 - TPM plugins that rewrite tokens such as `#{battery_percentage}` inside `status-left`/`status-right` do not see the tokens in the sections. Put the plugin's `#(script)` in the section instead.
 - After `tmux source ~/.tmux.conf`, a section removed from your config keeps its last value until the server restarts (`set -o` keeps set values). Set it to `''` to hide it.
+- A client without a UTF-8 locale (FreeBSD `vt` console, `LANG=C`) gets flat blocks and `|` instead of `_` for every glyph. Arch and FreeBSD (13+) default to UTF-8 locales.
 
 ## RULES
 
@@ -308,7 +328,7 @@ Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assign
 
 Known deviation: Hikaru has one `color-urgent` key for both urgent views and non-NORMAL modes (resize), so it is AMBER, not RED as in Sway. Hikaru draws no bar or titlebar and `color-*` accepts only `#rrggbb`. A personal `~/.config/mako/config` replaces Hikaru's shipped mako layout entirely; the retrocrt mako adapter is colors only, so re-add font/size/anchor keys if needed. waylock has no config file, so its flags live in `hikaru-lock`; the adapter documents them but `install.sh` does not edit that script.
 
-Known deviation: tmux power uses `VISUAL_BG` as the raised segment surface (B, Y) as well as for copy-mode selection; the palette has no other mid-tone between `BACKGROUND_ALT` and the accents. Its bar is `BACKGROUND` (like the swaybar), not `BACKGROUND_ALT` as in the flat `retrocrt.conf`. `GREEN` reaches it only through the battery. Separators are Powerline glyphs from the Nerd Font in `--packages`; set them to `''` for flat blocks.
+Known deviation: tmux power uses `VISUAL_BG` as the raised segment surface (B, Y) as well as for copy-mode selection; the palette has no other mid-tone between `BACKGROUND_ALT` and the accents. Its bar is `BACKGROUND` (like the swaybar), not `BACKGROUND_ALT` as in the flat `retrocrt.conf`. `GREEN` reaches it only through the battery. Separators are Powerline glyphs from the Nerd Font in `--packages` (`ttf-jetbrains-mono-nerd`, `nerd-fonts-jetbrainsmono`); set them to `''` for flat blocks.
 
 Known deviation: Sway window classes have no selection chrome. `MAGENTA` is unused there. waybar / wofi / fuzzel are not Sway's own programs; add them later as separate adapters.
 
@@ -351,7 +371,8 @@ include ~/.config/retrocrt/adapters/sway/colors
 ```
 
 ```tmux
-# ~/.tmux.conf
+# ~/.tmux.conf — the same on Arch Linux and FreeBSD
+# set -g @retrocrt_battery on    # laptop; off on a PC; default auto
 source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
 # optional powerline status line (after retrocrt.conf):
 # source-file ~/.config/retrocrt/adapters/tmux/power.conf
@@ -400,7 +421,7 @@ source retrocrt.zsh         color overlay
 ./verify.sh
 ```
 
-Besides palette and adapters, it installs `--dotfiles` into a throwaway `HOME` and loads the vimrc, the Neovim config, and the zshrc there (including the `wl-copy` fallback when `vim` has no `+clipboard`).
+Besides palette and adapters, it installs `--dotfiles` into a throwaway `HOME` and loads the vimrc, the Neovim config, and the zshrc there (including the `wl-copy` fallback when `vim` has no `+clipboard`). The battery script runs against a fake Arch sysfs and a fake FreeBSD `sysctl`, as a laptop and as a PC, in `on` / `auto` / `off`.
 
 Manual checks:
 
@@ -410,7 +431,7 @@ nvim -c 'colorscheme retrocrt'
 yazi
 # Ghostty: theme = retrocrt
 # zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion; battery on the right
-# tmux: battery left, date right; copy-mode MAGENTA
+# tmux: battery left (laptop), none (PC), date right; copy-mode MAGENTA
 # tmux power: pill CYAN NORMAL; prefix AMBER PREFIX; copy-mode MAGENTA COPY; arrows close over empty sections
 # sway: set $term ghostty; include adapters/sway/colors; reload
 # mako: makoctl reload

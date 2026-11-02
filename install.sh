@@ -296,6 +296,14 @@ echo "  tmux (~/.tmux.conf):"
 echo "    source-file ${DEST}/adapters/tmux/retrocrt.conf"
 echo "    # optional powerline status line, after retrocrt.conf:"
 echo "    # source-file ${DEST}/adapters/tmux/power.conf"
+# Laptop or PC: the battery script in auto mode prints only if there is one.
+if [ -n "$(sh "$REPO/adapters/tmux/battery" auto 2>/dev/null)" ]; then
+  echo "    # battery found (laptop): shown by default (auto); to pin it:"
+  echo "    # set -g @retrocrt_battery on"
+else
+  echo "    # no battery found (PC): hidden by default (auto); to pin it:"
+  echo "    # set -g @retrocrt_battery off"
+fi
 echo
 if [ "$DOTFILES" -eq 0 ]; then
   echo "  vim  (~/.vimrc):"
