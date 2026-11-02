@@ -495,6 +495,177 @@ else
 fi
 
 echo
+echo "=== waybar: Projekt Blackwall (FreeBSD) ==="
+WD=dotfiles/waybar
+# Own palette (Blackwall), a documented deviation from retrocrt: exactly these.
+BW_HEX="#0c0f13 #12171d #26323d #d9e2ea #8f9eac #4fd6e0 #5fd38a #e3c84f #ee7262 #bb7be0"
+if need_hex "$WD/style.css" $BW_HEX; then
+  ok "waybar style.css has the Blackwall palette"
+fi
+bw_extra=$(grep -Eio '#[0-9a-f]{6}' "$WD/style.css" | tr 'A-F' 'a-f' | sort -u | while read -r h; do
+  case " $BW_HEX " in *" $h "*) ;; *) printf '%s ' "$h" ;; esac
+done)
+[ -z "$bw_extra" ] && ok "waybar style.css uses no other hex" || bad "waybar style.css has colors outside the Blackwall palette: $bw_extra"
+bw_cls_ok=1
+for c in off zielony zolty czerwony czarny armed; do
+  grep -Eq "\.$c([^a-z_-]|\$)" "$WD/style.css" || { bad "waybar style.css lacks state class .$c"; bw_cls_ok=0; }
+done
+[ "$bw_cls_ok" -eq 1 ] && ok "waybar style.css has the state classes off zielony zolty czerwony czarny armed"
+if LC_ALL=C grep -q '[^ -~]' "$WD/icons.jsonc"; then
+  bad "waybar icons.jsonc is not ASCII (use \\u escapes)"
+else
+  ok "waybar icons.jsonc is ASCII (\\u escapes)"
+fi
+
+if command -v jq > /dev/null 2>&1; then
+  wb_strip() { sed 's#^[[:space:]]*//.*$##' "$1"; }
+  wb_json_ok=1
+  for f in "$WD"/config.jsonc "$WD"/icons.jsonc "$WD"/modules/*.jsonc; do
+    wb_strip "$f" | jq -e . > /dev/null 2>&1 || { bad "waybar $f is not valid JSONC"; wb_json_ok=0; }
+  done
+  [ "$wb_json_ok" -eq 1 ] && ok "waybar config, icons, and modules are valid JSONC"
+  # Waybar's include merge: first definition wins, objects merge recursively.
+  wb_merge() { for f in "$@"; do wb_strip "$f"; done | jq -s 'reduce .[] as $x ({}; $x * .)'; }
+  wb_with=$(wb_merge "$WD/config.jsonc" "$WD/icons.jsonc" "$WD"/modules/ice.jsonc "$WD"/modules/sway.jsonc "$WD"/modules/net.jsonc "$WD"/modules/system.jsonc)
+  wb_text=$(wb_merge "$WD/config.jsonc" "$WD"/modules/ice.jsonc "$WD"/modules/sway.jsonc "$WD"/modules/net.jsonc "$WD"/modules/system.jsonc)
+  wb_incl=$(wb_strip "$WD/config.jsonc" | jq -r '.include[]' | sed 's#^~/.config/waybar/##' | tr '\n' ' ')
+  [ "$wb_incl" = "icons.jsonc modules/ice.jsonc modules/sway.jsonc modules/net.jsonc modules/system.jsonc " ] \
+    && ok "waybar includes icons first, then the modules" || bad "waybar include list unexpected: $wb_incl"
+  wb_missing=$(printf '%s' "$wb_with" | jq -r '(.["modules-left"]+.["modules-center"]+.["modules-right"])[] as $m | select(has($m)|not) | $m')
+  [ -z "$wb_missing" ] && ok "waybar: every module has settings" || bad "waybar modules without settings: $wb_missing"
+  wb_bad=$(printf '%s' "$wb_with" | jq -r '(.["modules-left"]+.["modules-center"]+.["modules-right"])[] | select(test("^(sway/window|network|battery|upower|pulseaudio|wireplumber|bluetooth|mpris|mpd|temperature)$|weather|update"))')
+  [ -z "$wb_bad" ] && ok "waybar: no window title, no Linux-only, battery, or internet modules" || bad "waybar forbidden modules: $wb_bad"
+  [ "$(printf '%s' "$wb_with" | jq -r '.["custom/ice"].format')" = "{icon} {}" ] && [ "$(printf '%s' "$wb_text" | jq -r '.["custom/ice"].format')" = "ICE {}" ] \
+    && ok "waybar: icons.jsonc wins; without it the labels are text" || bad "waybar icon/text format merge"
+  for m in ice blackwall; do
+    acts=$(printf '%s' "$wb_with" | jq -r --arg m "custom/$m" '.[$m]["menu-actions"] | keys[]' | sort | tr '\n' ' ')
+    ids=$(grep -o 'GtkMenuItem" id="[a-z]*"' "$WD/menus/$m.xml" | sed 's/.*id="//; s/"//' | sort | tr '\n' ' ')
+    [ -n "$acts" ] && [ "$acts" = "$ids" ] && ok "waybar $m menu ids match menu-actions ($acts)" || bad "waybar $m menu: actions '$acts' xml '$ids'"
+  done
+  wb_ice_acts=$(printf '%s' "$wb_with" | jq -r '.["custom/ice"]["menu-actions"][]' | sed 's#.*/##' | tr '\n' '|')
+  [ "$wb_ice_acts" = "ice-action raise|ice-action snapshot|" ] \
+    && ok "waybar ICE menu only raises protection" || bad "waybar ICE menu actions: $wb_ice_acts"
+  [ "$(printf '%s' "$wb_with" | jq -r '[.["custom/ice"].escape, .["custom/blackwall"].escape] | all')" = true ] \
+    && ok "waybar ICE and Blackwall escape markup" || bad "waybar ICE/Blackwall without escape"
+else
+  printf 'SKIP  jq not installed (waybar config not parsed)\n'
+fi
+if command -v python3 > /dev/null 2>&1; then
+  python3 -I -c 'import sys, xml.etree.ElementTree as E; [E.parse(f) for f in sys.argv[1:]]' "$WD"/menus/*.xml \
+    && ok "waybar menus are well-formed XML" || bad "waybar menu XML broken"
+fi
+# GTK's own CSS parser, as Waybar loads it (needs libgtk-3 and python3).
+if command -v python3 > /dev/null 2>&1 && python3 -I -c 'import ctypes; ctypes.CDLL("libgtk-3.so.0")' > /dev/null 2>&1; then
+  if python3 -I "${ROOT}/testdata/gtk-css-check.py" "${ROOT}/$WD/style.css" > /dev/null 2>&1; then
+    ok "waybar style.css loads in GTK 3"
+  else
+    bad "waybar style.css has GTK parse errors: $(python3 -I "${ROOT}/testdata/gtk-css-check.py" "${ROOT}/$WD/style.css" 2> /dev/null | head -3)"
+  fi
+else
+  printf 'SKIP  libgtk-3 not available (waybar CSS not parsed)\n'
+fi
+
+# Module scripts against fake FreeBSD tools (ifconfig, sysctl, zpool, mixer).
+wbf=$(mktemp -d "${TMPDIR:-/tmp}/retrocrt-waybar.XXXXXX")
+wb_tool() { mkdir -p "$wbf/$1"; printf '#!/bin/sh\n%s\n' "$3" > "$wbf/$1/$2"; chmod +x "$wbf/$1/$2"; }
+wb_tool ok ifconfig 'case "$1" in
+-l) echo "bridge0 tap0 em0 em0.40 wgmgmt lo0" ;;
+em0) printf "em0: flags=8843<UP,BROADCAST,RUNNING> mtu 1500\n\tinet 192.168.1.10 netmask 0xffffff00\n\tmedia: Ethernet autoselect (1000baseT <full-duplex>)\n\tstatus: active\n" ;;
+wgmgmt) printf "wgmgmt: flags=80c1<UP,RUNNING,NOARP> mtu 1420\n\tinet 10.99.0.2 netmask 0xffffffff\n" ;;
+*) exit 1 ;; esac'
+wb_tool nowg ifconfig 'case "$1" in -l) echo "em0" ;; em0) printf "em0: flags=8843<UP> mtu 1500\n\tinet 192.168.1.10\n\tstatus: active\n" ;; *) exit 1 ;; esac'
+wb_tool nocar ifconfig 'case "$1" in -l) echo "em0" ;; em0) printf "em0: flags=8843<UP> mtu 1500\n\tstatus: no carrier\n" ;; *) exit 1 ;; esac'
+wb_tool ok sysctl 'case "$2" in dev.cpu.0.temperature) echo 45.0C ;; *) exit 1 ;; esac'
+wb_tool ok zpool 'echo "all pools are healthy"'
+wb_tool bad zpool 'printf " pool: forteca\n state: DEGRADED\n"'
+wb_tool ok mixer 'case "$1" in vol.volume) echo vol.volume=0.75:0.75 ;; vol.mute) echo vol.mute=off ;; esac'
+wb_tool bad mixer 'case "$1" in vol.volume) echo vol.volume=0.30:0.30 ;; vol.mute) echo vol.mute=on ;; esac'
+wb_tool ok vpnmgr-bar 'echo "UP name=pl-waw if=wg1"'
+wb_tool bad vpnmgr-bar 'echo "UP name=\$(id)"; echo second'
+mkdir -p "$wbf/none"
+wb_case() { # label tools script args expected-text expected-class
+  out=$(env -i HOME="$wbf" PATH="$wbf/$2:/usr/bin:/bin" sh "${ROOT}/$WD/scripts/$3" $4 2> /dev/null)
+  if command -v jq > /dev/null 2>&1; then
+    got=$(printf '%s' "$out" | jq -r '"\(.text)|\(.class[0])"' 2> /dev/null || echo "invalid JSON: $out")
+  else
+    got=$out
+  fi
+  case $got in
+    "$5|$6"|*"\"text\":\"$5\""*"\"class\":[\"$6\"]"*) ok "waybar $3 $1: $5 ($6)" ;;
+    *) bad "waybar $3 $1: expected '$5|$6' got '$got'" ;;
+  esac
+}
+wb_case "em0 + wgmgmt"       ok    link  ""         "em0 · wg"          zielony
+wb_case "no wgmgmt"          nowg  link  ""         "em0 · wg --"       zolty
+wb_case "no carrier"         nocar link  ""         "em0 no carrier · wg --" czerwony
+wb_case "no vpnmgr-bar"      none  vpn   ""         "VPN --"            off
+wb_case "UP"                 ok    vpn   ""         "VPN pl-waw"        zielony
+wb_case "invalid answer"     bad   vpn   ""         "VPN ?"             czerwony
+wb_case "healthy"            ok    zfs   ""         "ZFS"               zielony
+wb_case "degraded"           bad   zfs   ""         "ZFS !"             czerwony
+wb_case "no zpool"           none  zfs   ""         "ZFS --"            off
+wb_case "75%"                ok    audio ""         "75%"               zielony
+wb_case "muted"              bad   audio ""         "mute"              off
+wb_case "dev.cpu 45"         ok    temp  "0 70 85"  "45°C"              zielony
+wb_case "no sensor"          none  temp  ""         "--"                off
+# Actions: fixed commands, a message when a tool is missing, no sudo outside a session.
+wbl=$wbf/calls
+for t in notify-send kitty swaylock sudo iced-tui; do wb_tool act "$t" "echo \"$t \$*\" >> $wbl"; done
+wb_tool nottui notify-send "echo \"notify-send \$*\" >> $wbl"
+: > "$wbl"; env -i HOME="$wbf" PATH="$wbf/nottui:/usr/bin:/bin" sh "${ROOT}/$WD/scripts/ice-action" raise
+grep -q 'notify-send.*iced-tui is not installed' "$wbl" && ok "waybar ICE action without iced-tui: a message, no error" || bad "waybar ICE action without iced-tui"
+: > "$wbl"; env -i HOME="$wbf" PATH="$wbf/act:/usr/bin:/bin" sh "${ROOT}/$WD/scripts/ice-action" raise
+grep -qx 'iced-tui --quickhack 4' "$wbl" && ok "waybar ICE raise runs iced-tui --quickhack 4" || bad "waybar ICE raise: $(cat "$wbl")"
+: > "$wbl"; env -i HOME="$wbf" PATH="$wbf/act:/usr/bin:/bin" JACK_STATE_DIR="$wbf/jack" sh "${ROOT}/$WD/scripts/blackwall-slide"
+if grep -q '^sudo' "$wbl"; then bad "waybar Slide ran sudo without a session"; else ok "waybar Slide without a session: no sudo"; fi
+mkdir -p "$wbf/jack"; : > "$wbf/jack/session"; : > "$wbl"
+env -i HOME="$wbf" PATH="$wbf/act:/usr/bin:/bin" JACK_STATE_DIR="$wbf/jack" sh "${ROOT}/$WD/scripts/blackwall-slide"
+[ "$(tr '\n' '|' < "$wbl")" = "sudo -n /usr/local/bin/jack slide|swaylock -f|" ] \
+  && ok "waybar Slide: sudo -n jack slide, then swaylock -f" || bad "waybar Slide calls: $(tr '\n' '|' < "$wbl")"
+rm -rf "$wbf"
+wb_exec_ok=1
+for f in "$WD"/scripts/*; do
+  case $f in */lib.sh) continue ;; esac
+  [ -x "$f" ] || { bad "waybar $f is not executable"; wb_exec_ok=0; }
+done
+[ "$wb_exec_ok" -eq 1 ] && ok "waybar scripts are executable"
+if grep -n 'pgrep\|eval \|curl\|fetch \|wget' "$WD"/scripts/* > /dev/null; then
+  bad "waybar scripts use pgrep, eval, or the network"
+else
+  ok "waybar scripts: no pgrep, eval, or network"
+fi
+
+# iced-bar (C): -Werror build everywhere; the full test suite runs on FreeBSD
+# (kqueue, a few seconds) or with VERIFY_SLOW=1 elsewhere (1 s re-read).
+if command -v cc > /dev/null 2>&1; then
+  ibtmp=$(mktemp -d "${TMPDIR:-/tmp}/retrocrt-iced.XXXXXX")
+  if cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror -o "$ibtmp/iced-bar" "$WD/iced-bar/iced-bar.c" 2> "$ibtmp/err"; then
+    ok "iced-bar builds (C11, -Wall -Wextra -Wpedantic -Werror)"
+    if [ "$(uname -s)" = FreeBSD ] || [ "${VERIFY_SLOW:-0}" = 1 ]; then
+      if TMPDIR=$ibtmp sh "$WD/iced-bar/test.sh" "$ibtmp/iced-bar" 3 > "$ibtmp/test.log" 2>&1; then
+        ok "iced-bar test suite: $(tail -n 1 "$ibtmp/test.log")"
+      else
+        bad "iced-bar test suite: $(grep FAIL "$ibtmp/test.log" | head -3)"
+      fi
+    else
+      printf 'SKIP  iced-bar test suite (FreeBSD, or VERIFY_SLOW=1)\n'
+    fi
+    if [ "${VERIFY_SLOW:-0}" = 1 ]; then
+      if TMPDIR=$ibtmp sh "$WD/iced-bar/test.sh" "$WD/scripts/iced-bar.sh" 7 > "$ibtmp/test-sh.log" 2>&1; then
+        ok "iced-bar.sh passes the same suite: $(tail -n 1 "$ibtmp/test-sh.log")"
+      else
+        bad "iced-bar.sh test suite: $(grep FAIL "$ibtmp/test-sh.log" | head -3)"
+      fi
+    fi
+  else
+    bad "iced-bar does not build: $(head -3 "$ibtmp/err")"
+  fi
+  rm -rf "$ibtmp"
+else
+  printf 'SKIP  no C compiler (iced-bar not built)\n'
+fi
+
+echo
 echo "=== sway / mako ==="
 if grep -q 'bindsym\|bindcode\|exec ' adapters/sway/colors adapters/sway/bar adapters/sway/bar-colors; then
   bad "sway adapter contains binds or exec"

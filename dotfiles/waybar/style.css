@@ -1,0 +1,168 @@
+/* Projekt Blackwall - Waybar style (FreeBSD, GTK 3 CSS).
+ *
+ * Colour carries meaning: the ICE and Blackwall modules are filled with
+ * their state colour; everything else stays calm and only turns ZOLTY (yellow) or
+ * CZERWONY on a fault. State classes shared by the custom modules:
+ *   off  zielony  zolty  czerwony  czarny  armed
+ * (cpu and memory use Waybar's own warning / critical).
+ */
+
+@define-color bw_bg       #0c0f13;  /* background */
+@define-color bw_surface  #12171d;  /* surface */
+@define-color bw_line     #26323d;  /* line */
+@define-color bw_text     #d9e2ea;  /* text */
+@define-color bw_dim      #8f9eac;  /* muted text */
+@define-color bw_ice      #4fd6e0;  /* akcent ICE */
+@define-color bw_zielony  #5fd38a;
+@define-color bw_zolty    #e3c84f;
+@define-color bw_czerwony #ee7262;
+@define-color bw_czarny   #bb7be0;
+
+* {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 13px;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+}
+
+window#waybar {
+  background-color: @bw_bg;
+  color: @bw_text;
+  border-bottom: 1px solid @bw_line;
+}
+
+tooltip {
+  background-color: @bw_surface;
+  border: 1px solid @bw_line;
+}
+tooltip label {
+  color: @bw_text;
+}
+
+menu {
+  background-color: @bw_surface;
+  border: 1px solid @bw_line;
+  color: @bw_text;
+}
+menuitem {
+  padding: 4px 12px;
+}
+menuitem:hover {
+  background-color: @bw_line;
+  color: @bw_ice;
+}
+
+/* Every module: one calm segment on the surface colour. */
+#custom-ice,
+#custom-blackwall,
+#mode,
+#clock,
+#custom-link,
+#custom-vpn,
+#custom-zfs,
+#cpu,
+#memory,
+#custom-temp,
+#custom-audio,
+#language,
+#idle_inhibitor {
+  padding: 0 10px;
+  margin-right: 1px;
+  background-color: @bw_surface;
+  color: @bw_text;
+}
+
+/* ---- ICE: filled with the level colour ---------------------------------- */
+#custom-ice {
+  font-weight: bold;
+  color: @bw_dim;
+}
+#custom-ice.zielony  { background-color: @bw_zielony;  color: @bw_bg; }
+#custom-ice.zolty    { background-color: @bw_zolty;    color: @bw_bg; }
+#custom-ice.czerwony { background-color: @bw_czerwony; color: @bw_bg; }
+#custom-ice.czarny   { background-color: @bw_czarny;   color: @bw_bg; }
+
+/* Countdown to shutdown: hard blink, once a second. */
+@keyframes bw-armed {
+  0%   { background-color: @bw_czerwony; color: @bw_bg; }
+  49%  { background-color: @bw_czerwony; color: @bw_bg; }
+  50%  { background-color: @bw_bg;       color: @bw_czerwony; }
+  100% { background-color: @bw_bg;       color: @bw_czerwony; }
+}
+#custom-ice.armed {
+  animation-name: bw-armed;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* ---- Blackwall: discreet outside a session, unmistakable inside --------- */
+#custom-blackwall.off {
+  background-color: @bw_bg;
+  color: @bw_line;
+}
+#custom-blackwall.czarny {
+  background-color: @bw_czarny;
+  color: @bw_bg;
+  font-weight: bold;
+  border-bottom: 2px solid @bw_ice;
+}
+
+/* ---- sway ----------------------------------------------------------------- */
+#workspaces button {
+  padding: 0 8px;
+  background-image: none;
+  background-color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+  color: @bw_dim;
+}
+#workspaces button.focused {
+  color: @bw_text;
+  box-shadow: inset 0 -2px @bw_ice;
+}
+#workspaces button.urgent {
+  color: @bw_czerwony;
+}
+#workspaces button:hover {
+  background-color: @bw_line;
+}
+#mode {
+  color: @bw_ice;
+  box-shadow: inset 0 -2px @bw_ice;
+}
+#language {
+  color: @bw_dim;
+}
+/* No automatic lock while active: worth noticing. */
+#idle_inhibitor {
+  color: @bw_dim;
+}
+#idle_inhibitor.activated {
+  color: @bw_zolty;
+}
+
+/* ---- calm modules: colour only on a fault ------------------------------- */
+#custom-link.off,
+#custom-vpn.off,
+#custom-zfs.off,
+#custom-temp.off,
+#custom-audio.off {
+  color: @bw_dim;
+}
+#custom-link.zolty,
+#custom-vpn.zolty,
+#custom-temp.zolty,
+#cpu.warning,
+#memory.warning {
+  color: @bw_zolty;
+}
+#custom-link.czerwony,
+#custom-vpn.czerwony,
+#custom-zfs.czerwony,
+#custom-temp.czerwony,
+#cpu.critical,
+#memory.critical {
+  color: @bw_czerwony;
+}

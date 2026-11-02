@@ -66,6 +66,18 @@
     .tbar .inner { background: var(--bg-alt); }
     .tbar .bell { background: var(--urgent); }
     .tbar .date { background: var(--blue); color: var(--bg); font-weight: 700; }
+    /* waybar mock (FreeBSD): same colors and gaps as dotfiles/waybar/style.css */
+    .wbar { display: flex; align-items: stretch; height: 26px; line-height: 26px; font-size: 13px; white-space: pre; background: var(--bg); border: 1px solid var(--bg-alt); margin: 6px 0; overflow: hidden; }
+    .wbar span { flex: none; padding: 0 10px; }
+    .wbar .ws { padding: 0 8px; background: var(--bg-alt); color: var(--dim); }
+    .wbar .ws.focused { background: var(--cyan); color: var(--bg); font-weight: 700; }
+    .wbar .ws.visible { color: var(--cyan); }
+    .wbar .ws.urgent { background: var(--urgent); color: var(--red); }
+    .wbar .wmode { background: var(--amber); color: var(--bg); font-weight: 700; }
+    .wbar .title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-align: center; }
+    .wbar .seg { background: var(--bg-alt); margin-left: 1px; }
+    .wbar .seg.first { margin-left: 0; }
+    .wbar .clock { background: var(--blue); color: var(--bg); font-weight: 700; margin-left: 4px; }
     .fm { --f: var(--mode); } .fv { --f: var(--visual); } .fi { --f: var(--bg-alt); } .fb { --f: var(--bg); } .fd { --f: var(--blue); } .fu { --f: var(--urgent); }
     .bm { --b: var(--mode); } .bv { --b: var(--visual); } .bi { --b: var(--bg-alt); } .bb { --b: var(--bg); } .bu { --b: var(--urgent); }
   </style>
@@ -112,6 +124,11 @@
   <div class="tbar" style="--mode:var(--amber)"><span class="pill">PREFIX</span><i class="fm bv"></i><span class="raise">work</span><i class="fv bi"></i><span class="inner c-green">BAT 87%</span><i class="fi bb"></i><i class="fb bm"></i><span class="cur">0:zsh*</span><i class="fm bb"></i><i class="fb bi"></i><span class="inner c-cyan">1:nvim-</span><i class="fi bb"></i><i class="fb bi"></i><span class="inner c-amber">2:yazi#</span><i class="fi bb"></i><i class="fb bu"></i><span class="bell c-red">3:htop!</span><i class="fu bb"></i><span class="gap"></span><i class="l fv bb"></i><span class="raise">11:45</span><i class="l fd bv"></i><span class="date">2026-11-02</span></div>
   <div class="tbar" style="--mode:var(--magenta)"><span class="pill">COPY</span><i class="fm bv"></i><span class="raise">work</span><i class="fv bi"></i><span class="inner c-green">BAT 87%</span><i class="fi bb"></i><i class="fb bm"></i><span class="cur">0:zsh*</span><i class="fm bb"></i><i class="fb bi"></i><span class="inner c-cyan">1:nvim-</span><i class="fi bb"></i><i class="fb bi"></i><span class="inner c-amber">2:yazi#</span><i class="fi bb"></i><i class="fb bu"></i><span class="bell c-red">3:htop!</span><i class="fu bb"></i><span class="gap"></span><i class="l fv bb"></i><span class="raise">11:45</span><i class="l fd bv"></i><span class="date">2026-11-02</span></div>
   <div class="tbar" style="--mode:var(--amber)"><span class="pill">SYNC</span><i class="fm bv"></i><span class="raise">work</span><i class="fv bi"></i><span class="inner c-green">BAT 87%</span><i class="fi bb"></i><i class="fb bm"></i><span class="cur">0:zsh*</span><i class="fm bb"></i><i class="fb bi"></i><span class="inner c-cyan">1:nvim-</span><i class="fi bb"></i><i class="fb bi"></i><span class="inner c-amber">2:yazi#</span><i class="fi bb"></i><i class="fb bu"></i><span class="bell c-red">3:htop!</span><i class="fu bb"></i><span class="gap"></span><i class="l fv bb"></i><span class="raise">11:45</span><i class="l fd bv"></i><span class="date">2026-11-02</span></div>
+
+  <h2>Waybar (FreeBSD)</h2>
+  <p class="dim"><code>dotfiles/waybar</code> + <code>adapters/waybar/retrocrt.css</code>. Focused workspace CYAN, binding mode AMBER, network GREEN / RED, date BLUE.</p>
+  <div class="wbar"><span class="ws focused">1</span><span class="ws visible">2</span><span class="ws">3</span><span class="ws urgent">4</span><span class="title">nvim</span><span class="seg first c-green">NET em0 192.168.1.10</span><span class="seg">VOL 75%</span><span class="seg">CPU 12%</span><span class="seg">MEM 40%</span><span class="seg">TMP 45°C</span><span class="clock">2026-11-02 14:05</span></div>
+  <div class="wbar"><span class="ws focused">1</span><span class="ws">2</span><span class="wmode">resize</span><span class="title"></span><span class="seg first c-red">NET --</span><span class="seg c-dim">VOL mute</span><span class="seg c-amber">CPU 78%</span><span class="seg">MEM 40%</span><span class="seg" style="background:var(--red);color:var(--bg)">TMP 86°C</span><span class="clock">2026-11-02 14:05</span></div>
 
   <h2>Semantic roles</h2>
   <table>

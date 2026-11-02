@@ -1,0 +1,79 @@
+#!/bin/sh
+# Connectivity: the Ethernet card and the management tunnel, read with
+# ifconfig(8) as a normal user (no root, no network traffic).
+# Usage: link [ETHERNET] [TUNNEL]   (defaults: first physical Ethernet, wgmgmt)
+# Class: zielony both fine, zolty tunnel missing/down or no IPv4,
+# czerwony card missing, down or no carrier.
+. "$(dirname -- "$0")/lib.sh"
+
+eth=${1-}
+wg=${2:-wgmgmt}
+
+if ! has ifconfig; then
+  emit 'NET --' off 'no ifconfig'
+  exit 0
+fi
+
+# First interface with an Ethernet address that is not a bridge, tap, epair,
+# VLAN, lagg or tunnel (bhyve and the VLAN 40 compartment add those).
+if [ -z "$eth" ]; then
+  for i in $(ifconfig -l ether 2> /dev/null); do
+    case $i in
+      bridge*|tap*|epair*|vlan*|lagg*|wg*|tun*|vm-*|*.*) continue ;;
+    esac
+    eth=$i
+    break
+  done
+fi
+
+is_up() { # first line of ifconfig output has the UP flag
+  case $(printf '%s\n' "$1" | head -n 1) in
+    *'<UP,'*|*',UP,'*|*'<UP>'*|*',UP>'*) return 0 ;;
+  esac
+  return 1
+}
+
+level=0   # 0 zielony, 1 zolty, 2 czerwony
+tip=
+
+if [ -z "$eth" ] || ! info=$(ifconfig "$eth" 2> /dev/null); then
+  etext="eth --"; level=2
+  tip="Ethernet: no card${eth:+ $eth}"
+else
+  ip=$(printf '%s\n' "$info" | awk '$1 == "inet" { print $2; exit }')
+  status=$(printf '%s\n' "$info" | sed -n 's/^[[:space:]]*status: //p' | head -n 1)
+  media=$(printf '%s\n' "$info" | sed -n 's/^[[:space:]]*media: //p' | head -n 1)
+  if ! is_up "$info"; then
+    etext="$eth down"; level=2
+  elif [ -n "$status" ] && [ "$status" != active ]; then
+    etext="$eth $status"; level=2
+  elif [ -z "$ip" ]; then
+    etext="$eth no IP"; level=1
+  else
+    etext=$eth
+  fi
+  tip="Ethernet $eth: ${status:-?}, ${ip:-no IPv4}${media:+
+$media}"
+fi
+
+if ! winfo=$(ifconfig "$wg" 2> /dev/null); then
+  wtext="wg --"; [ "$level" -lt 1 ] && level=1
+  tip="$tip
+$wg: no interface"
+elif ! is_up "$winfo"; then
+  wtext="wg down"; [ "$level" -lt 1 ] && level=1
+  tip="$tip
+$wg: down"
+else
+  wip=$(printf '%s\n' "$winfo" | awk '$1 == "inet" { print $2; exit }')
+  wtext=wg
+  tip="$tip
+$wg: UP, ${wip:-no IPv4}"
+fi
+
+case $level in
+  0) cls=zielony ;;
+  1) cls=zolty ;;
+  *) cls=czerwony ;;
+esac
+emit "$etext · $wtext" "$cls" "$tip"

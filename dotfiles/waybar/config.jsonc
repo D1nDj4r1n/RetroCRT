@@ -1,0 +1,30 @@
+// Projekt Blackwall - Waybar on Forteca (FreeBSD 15, sway, one monitor).
+// Base file: the bar and the order of modules. Module settings come from the
+// include files; for each key the first definition wins, so icons.jsonc
+// (installed only when a Nerd Font is present) overrides the text formats in
+// modules/*.jsonc. A missing include is only a warning.
+// Waybar 0.15.0 from ports: "include" since 0.9.8, "menu" since 0.10.4.
+// No window title and nothing that talks to the internet.
+{
+  "layer": "top",
+  "position": "top",
+  "height": 26,
+  "spacing": 0,
+  "reload_style_on_change": true,
+
+  "include": [
+    "~/.config/waybar/icons.jsonc",
+    "~/.config/waybar/modules/ice.jsonc",
+    "~/.config/waybar/modules/sway.jsonc",
+    "~/.config/waybar/modules/net.jsonc",
+    "~/.config/waybar/modules/system.jsonc"
+  ],
+
+  "modules-left": ["custom/ice", "custom/blackwall", "sway/workspaces", "sway/mode"],
+  "modules-center": ["clock"],
+  "modules-right": [
+    "custom/link", "custom/vpn", "custom/zfs",
+    "cpu", "memory", "custom/temp",
+    "custom/audio", "sway/language", "idle_inhibitor"
+  ]
+}

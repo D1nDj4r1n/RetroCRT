@@ -1,0 +1,20 @@
+// Connectivity and VPN. ifconfig(8) as a normal user; no traffic is sent.
+{
+  // Arguments: Ethernet card (default: first physical Ethernet), tunnel.
+  // Put the card name here once known, e.g. "... /link em0 wgmgmt".
+  "custom/link": {
+    "exec": "~/.config/waybar/scripts/link '' wgmgmt",
+    "return-type": "json",
+    "interval": 10,
+    "escape": true,
+    "format": "{}"
+  },
+  // Ready for vpnmgr: needs a vpnmgr-bar command (format in scripts/vpn).
+  "custom/vpn": {
+    "exec": "~/.config/waybar/scripts/vpn",
+    "return-type": "json",
+    "interval": 10,
+    "escape": true,
+    "format": "{}"
+  }
+}

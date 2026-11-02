@@ -1,0 +1,8 @@
+#!/bin/sh
+# Start the ICE or Blackwall module: iced-bar (C, kqueue, no polling) when it
+# is installed, otherwise the iced-bar.sh stand-in (same JSON, polls).
+# Usage: ice-exec [--blackwall]
+for b in "$HOME/.local/bin/iced-bar" /usr/local/bin/iced-bar; do
+  [ -x "$b" ] && exec "$b" "$@"
+done
+exec "$(dirname -- "$0")/iced-bar.sh" "$@"

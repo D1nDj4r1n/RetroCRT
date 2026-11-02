@@ -1,0 +1,83 @@
+// Nerd Font icons (Material Design, Nerd Fonts 3.4 nf-md-*), installed only
+// when a Nerd Font is present (install.sh checks fc-list). Included FIRST in
+// config.jsonc, so these formats win over the text formats in modules/*.jsonc;
+// without this file the bar shows text labels (ICE, CPU, VOL, ...).
+// Written as \u escapes (surrogate pairs) so the file stays ASCII.
+// Glyphs: shield_off_outline U+F099C, shield_check U+F0565, shield_half_full
+// U+F0780, shield_alert U+F0ECC, skull U+F068C, timer_alert U+F1ACC, wall
+// U+F07FE, wall_fire U+F1A11, ethernet U+F0200, alert U+F0026,
+// lan_disconnect U+F0319, vpn U+F0582, harddisk U+F02CA, cpu_64_bit U+F0EE0,
+// memory U+F035B, thermometer U+F050F, volume_high U+F057E, volume_off
+// U+F0581, clock_outline U+F0150, keyboard U+F030C, coffee U+F0176,
+// coffee_off U+F0FAA
+{
+  "custom/ice": {
+    "format": "{icon} {}",
+    "format-icons": {
+      "off": "\udb82\udd9c",
+      "zielony": "\udb81\udd65",
+      "zolty": "\udb81\udf80",
+      "czerwony": "\udb83\udecc",
+      "czarny": "\udb81\ude8c",
+      "armed": "\udb86\udecc"
+    }
+  },
+  "custom/blackwall": {
+    "format": "{icon} {}",
+    "format-icons": {
+      "off": "\udb81\udffe",
+      "session": "\udb86\ude11"
+    }
+  },
+  "custom/link": {
+    "format": "{icon} {}",
+    "format-icons": {
+      "zielony": "\udb80\ude00",
+      "zolty": "\udb80\udc26",
+      "czerwony": "\udb80\udf19",
+      "off": "\udb80\udf19"
+    }
+  },
+  "custom/vpn": {
+    "format": "{icon} {}",
+    "format-icons": {
+      "default": "\udb81\udd82"
+    }
+  },
+  "custom/zfs": {
+    "format": "{icon} {}",
+    "format-icons": {
+      "zielony": "\udb80\udeca",
+      "czerwony": "\udb80\udc26",
+      "off": "\udb80\udeca"
+    }
+  },
+  "cpu": {
+    "format": "\udb83\udee0 {usage}%"
+  },
+  "memory": {
+    "format": "\udb80\udf5b {percentage}%"
+  },
+  "custom/temp": {
+    "format": "\udb81\udd0f {}"
+  },
+  "custom/audio": {
+    "format": "{icon} {}",
+    "format-icons": {
+      "zielony": "\udb81\udd7e",
+      "off": "\udb81\udd81"
+    }
+  },
+  "clock": {
+    "format": "\udb80\udd50 {:%H:%M}"
+  },
+  "sway/language": {
+    "format": "\udb80\udf0c {short}"
+  },
+  "idle_inhibitor": {
+    "format-icons": {
+      "activated": "\udb80\udd76",
+      "deactivated": "\udb83\udfaa"
+    }
+  }
+}

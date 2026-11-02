@@ -16,12 +16,17 @@ install.sh [options]
   --link         symlink this repository to $DEST (default)
   --copy         copy palette, README, adapters, and dotfiles to $DEST
   --dotfiles     also install dotfiles/: ~/.vimrc, ~/.zshrc, and the Neovim
-                 config (init.lua, lua/config, lua/plugins, after/ftplugin)
+                 config (init.lua, lua/config, lua/plugins, after/ftplugin);
+                 on FreeBSD also the Projekt Blackwall Waybar
+                 (~/.config/waybar: config, modules, menus, scripts, style)
   --packages     print the package and git clone commands for this system, then exit
   --hikaru-conf  rewrite the five color-* lines in ~/.config/hikaru/hikaru.conf
                  (optional HikaruWM; timestamped backup; only if the file exists)
   --dry-run      print actions without changing files
   --help         show this help
+
+  RETROCRT_SYSTEM=arch|freebsd  overrides system detection (e.g. to prepare
+                 or test the FreeBSD files on another machine)
 
 Default systems: Arch Linux and FreeBSD (POSIX sh, base utilities only).
 Main stack: Sway + Kitty + tmux + zsh + Vim/Neovim, on every device.
@@ -30,7 +35,7 @@ Installs visual adapters:
   Vim colorscheme, Neovim colorscheme + oil highlights,
   Yazi theme.toml, Kitty theme, Ghostty and foot themes, zsh color fragment, tmux styles
   (+ powerline status line),
-  Sway colors, mako, swaylock, swaynag, HikaruWM colors.
+  Sway colors, mako, swaylock, swaynag, HikaruWM colors;
   Sway colors are included, not a full sway config.
 
 Existing files are moved to <name>.bak.<timestamp> before they are replaced.
@@ -43,6 +48,10 @@ EOF
 }
 
 detect_system() {
+  if [ -n "${RETROCRT_SYSTEM:-}" ]; then
+    echo "$RETROCRT_SYSTEM"
+    return 0
+  fi
   case $(uname -s 2>/dev/null) in
     FreeBSD) echo freebsd ;;
     Linux)
@@ -82,11 +91,12 @@ EOF
 # FreeBSD (as root). Sway needs seatd and the video group (FreeBSD Handbook,
 # Wayland chapter). XDG_RUNTIME_DIR is set automatically since FreeBSD 14.1.
 pkg install sway swaylock swayidle swaybg mako kitty foot wl-clipboard seatd drm-kmod \\
-    tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
+    waybar libnotify tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
 sysrc seatd_enable=YES
 service seatd start
 pw groupmod video -m $user
 # GPU driver from drm-kmod, one of: sysrc kld_list+=i915kms | amdgpu | radeonkms
+# CPU temperature for Waybar, one of: sysrc kld_list+=coretemp | amdtemp
 
 EOF
   fi
@@ -276,6 +286,19 @@ if [ "$DOTFILES" -eq 1 ]; then
   link_or_copy "$DEST/dotfiles/nvim/lua/plugins" "$HOME/.config/nvim/lua/plugins"
   link_or_copy "$DEST/dotfiles/nvim/after/ftplugin" "$HOME/.config/nvim/after/ftplugin"
   link_or_copy "$DEST/dotfiles/zsh/zshrc" "$HOME/.zshrc"
+  # Projekt Blackwall Waybar: FreeBSD only (Arch keeps swaybar).
+  if [ "$SYSTEM" = freebsd ]; then
+    for f in config.jsonc style.css modules menus scripts; do
+      link_or_copy "$DEST/dotfiles/waybar/$f" "$HOME/.config/waybar/$f"
+    done
+    # Icons only with a Nerd Font; without icons.jsonc the bar uses text.
+    if command -v fc-list > /dev/null 2>&1 && fc-list : family 2> /dev/null | grep -qi 'nerd font'; then
+      link_or_copy "$DEST/dotfiles/waybar/icons.jsonc" "$HOME/.config/waybar/icons.jsonc"
+      WAYBAR_ICONS=yes
+    else
+      WAYBAR_ICONS=no
+    fi
+  fi
 fi
 
 echo
@@ -295,8 +318,30 @@ echo "  Arch /etc/sway/config, FreeBSD /usr/local/etc/sway/config):"
 echo "    set \$term kitty          # the default config sets foot"
 echo "    include ${DEST}/adapters/sway/colors"
 echo "    # existing bar: copy adapters/sway/bar-colors into colors { }"
-echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
+if [ "$SYSTEM" = freebsd ]; then
+  echo "    # FreeBSD bar is Waybar; replace the bar { } block with:"
+  echo "    bar { swaybar_command waybar }"
+else
+  echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
+fi
 echo
+if [ "$SYSTEM" = freebsd ]; then
+  echo "  waybar (Projekt Blackwall), FreeBSD:"
+  if [ "$DOTFILES" -eq 0 ]; then
+    echo "    ./install.sh --dotfiles installs it into ~/.config/waybar"
+  else
+    if [ "${WAYBAR_ICONS:-no}" = yes ]; then
+      echo "    Nerd Font found: icons.jsonc installed (icons)"
+    else
+      echo "    no Nerd Font: icons.jsonc not installed (text labels);"
+      echo "    pkg install nerd-fonts-jetbrainsmono, then run --dotfiles again"
+    fi
+  fi
+  echo "    iced-bar (C, kqueue): make -C ${DEST}/dotfiles/waybar/iced-bar test install"
+  echo "    until then the ICE modules use scripts/iced-bar.sh (polls every 5 s)"
+  echo "    reload without logging out: pkill -USR2 -x waybar"
+  echo
+fi
 echo "  tmux (~/.tmux.conf):"
 echo "    source-file ${DEST}/adapters/tmux/retrocrt.conf"
 echo "    source-file ${DEST}/adapters/tmux/power.conf   # powerline bar; omit for flat"

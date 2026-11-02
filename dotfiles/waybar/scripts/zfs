@@ -1,0 +1,26 @@
+#!/bin/sh
+# ZFS pools: zpool status -x as a normal user (/dev/zfs is readable on
+# FreeBSD; no root). Run every 60 s from Waybar.
+# Class: zielony healthy, czerwony anything else, off no zpool or no pools.
+. "$(dirname -- "$0")/lib.sh"
+
+if ! has zpool; then
+  emit 'ZFS --' off 'ZFS: no zpool command'
+  exit 0
+fi
+out=$(zpool status -x 2>&1)
+rc=$?
+out=$(printf '%s\n' "$out" | head -n 40 | head -c 4000)
+case $out in
+  'all pools are healthy')
+    emit 'ZFS' zielony 'ZFS: all pools are healthy' ;;
+  'no pools available'*)
+    emit 'ZFS --' off 'ZFS: no pools' ;;
+  *)
+    if [ "$rc" -ne 0 ] && [ -z "$out" ]; then
+      emit 'ZFS ?' off 'ZFS: zpool status gave no answer'
+    else
+      emit 'ZFS !' czerwony "$out"
+    fi
+    ;;
+esac

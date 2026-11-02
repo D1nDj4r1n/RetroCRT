@@ -1,0 +1,22 @@
+// sway: workspaces, binding mode, keyboard layout, idle inhibitor.
+{
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": true,
+    "format": "{name}"
+  },
+  "sway/mode": {
+    "format": "{}"
+  },
+  "sway/language": {
+    "format": "{short}",
+    "tooltip-format": "{long}"
+  },
+  // Activated = the screen does not lock itself: shown in ZOLTY yellow (style.css).
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": { "activated": "WAKE", "deactivated": "idle" },
+    "tooltip-format-activated": "Idle inhibited: the screen will NOT lock",
+    "tooltip-format-deactivated": "Idle: normal (the lock works)"
+  }
+}
