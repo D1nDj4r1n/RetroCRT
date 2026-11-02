@@ -2,3 +2,6 @@
 # Prefix and binds stay yours. Status: battery left, date right.
 
 source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
+
+# Optional powerline status line (mode pill, sections). After retrocrt.conf.
+# source-file ~/.config/retrocrt/adapters/tmux/power.conf

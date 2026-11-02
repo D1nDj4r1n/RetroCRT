@@ -27,7 +27,8 @@ Main stack: Sway + Ghostty + tmux + zsh + Vim/Neovim.
 
 Installs visual adapters:
   Vim colorscheme, Neovim colorscheme + oil highlights,
-  Yazi theme.toml, Ghostty theme, foot theme, zsh color fragment, tmux styles,
+  Yazi theme.toml, Ghostty theme, foot theme, zsh color fragment, tmux styles
+  (+ optional powerline status line),
   Sway colors, mako, swaylock, swaynag, HikaruWM colors.
   Sway colors are included, not a full sway config.
 
@@ -293,6 +294,8 @@ echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
 echo
 echo "  tmux (~/.tmux.conf):"
 echo "    source-file ${DEST}/adapters/tmux/retrocrt.conf"
+echo "    # optional powerline status line, after retrocrt.conf:"
+echo "    # source-file ${DEST}/adapters/tmux/power.conf"
 echo
 if [ "$DOTFILES" -eq 0 ]; then
   echo "  vim  (~/.vimrc):"
