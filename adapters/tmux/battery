@@ -2,18 +2,38 @@
 # retrocrt — tmux battery fragment (Linux sysfs, FreeBSD sysctl)
 # Prints a tmux style string. No plugins.
 # Healthy GREEN, low AMBER, critical RED. No battery: DIM.
+#
+# Usage: battery [on|auto|off]   (tmux passes #{@retrocrt_battery})
+#   on    laptop: always print; "BAT --" when no battery is found (default)
+#   auto  print only if this machine has a battery; nothing on a PC
+#   off   PC: print nothing, read nothing
 
 GREEN=#40c070
 AMBER=#ffb020
 RED=#e05050
 DIM=#5a6570
 
+mode=${1:-on}
+case "$mode" in
+  off) exit 0 ;;
+  auto) ;;
+  *) mode=on ;;
+esac
+
+# Tests point this at a fake sysfs tree.
+ps_dir=${RETROCRT_POWER_SUPPLY:-/sys/class/power_supply}
+
 cap=""
 st=""
-for d in /sys/class/power_supply/*; do
+for d in "$ps_dir"/*; do
   [ -d "$d" ] || continue
   t=$(cat "$d/type" 2>/dev/null) || continue
   [ "$t" = "Battery" ] || continue
+  # Mouse, keyboard, and gamepad batteries are also type Battery, with
+  # scope Device; the laptop battery has no scope or scope System.
+  [ "$(cat "$d/scope" 2>/dev/null)" = Device ] && continue
+  # Empty bay (e.g. a removed second battery).
+  [ "$(cat "$d/present" 2>/dev/null)" = 0 ] && continue
   cap=$(cat "$d/capacity" 2>/dev/null) || cap=""
   st=$(cat "$d/status" 2>/dev/null) || st=""
   break
@@ -21,7 +41,8 @@ done
 
 # FreeBSD: no /sys/class/power_supply. hw.acpi.battery.life is a percentage,
 # hw.acpi.battery.state is a bitmask (1 discharging, 2 charging, 4 critical;
-# 7 means not present, sys/dev/acpica/acpiio.h).
+# 7 means not present, sys/dev/acpica/acpiio.h). A PC without an ACPI battery
+# has no hw.acpi.battery node at all.
 if [ -z "$cap" ] && [ "$(uname -s 2>/dev/null)" = FreeBSD ]; then
   life=$(sysctl -n hw.acpi.battery.life 2>/dev/null) || life=""
   case "$life" in
@@ -39,15 +60,20 @@ if [ -z "$cap" ] && [ "$(uname -s 2>/dev/null)" = FreeBSD ]; then
   esac
 fi
 
+case "$cap" in
+  ''|*[!0-9]*) cap="" ;;
+esac
+
 if [ -z "$cap" ]; then
+  [ "$mode" = auto ] && exit 0
   printf '#[fg=%s]BAT --' "$DIM"
   exit 0
 fi
 
 color=$GREEN
-if [ "$cap" -le 15 ] 2>/dev/null; then
+if [ "$cap" -le 15 ]; then
   color=$RED
-elif [ "$cap" -le 30 ] 2>/dev/null; then
+elif [ "$cap" -le 30 ]; then
   color=$AMBER
 fi
 

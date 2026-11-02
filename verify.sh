@@ -212,6 +212,50 @@ if [ -x "${ROOT}/adapters/tmux/battery" ] || [ -f "${ROOT}/adapters/tmux/battery
     *) bad "tmux battery script unexpected: ${batout}" ;;
   esac
 fi
+
+# Battery on both default systems, laptop and PC, without the hardware:
+# a fake sysfs for Arch, fake uname/sysctl for FreeBSD.
+fx=$(mktemp -d "${TMPDIR:-/tmp}/retrocrt-battery.XXXXXX")
+fake_ps() { # dir name key value ...
+  d="$fx/$1/$2"
+  mkdir -p "$d"
+  shift 2
+  while [ $# -gt 1 ]; do printf '%s\n' "$2" > "$d/$1"; shift 2; done
+}
+fake_ps arch-laptop AC type Mains online 1
+fake_ps arch-laptop BAT0 type Battery capacity 87 status Charging present 1
+fake_ps arch-laptop hidpp_battery_0 type Battery scope Device capacity 40
+fake_ps arch-pc AAA_gamepad type Battery scope Device capacity 55
+fake_ps arch-pc ACAD type Mains online 1
+mkdir -p "$fx/none" "$fx/bsd-laptop" "$fx/bsd-pc"
+for b in bsd-laptop bsd-pc; do
+  printf '#!/bin/sh\necho FreeBSD\n' > "$fx/$b/uname"
+done
+printf '#!/bin/sh\ncase "$2" in hw.acpi.battery.life) echo 28 ;; hw.acpi.battery.state) echo 1 ;; *) exit 1 ;; esac\n' > "$fx/bsd-laptop/sysctl"
+printf '#!/bin/sh\necho "sysctl: unknown oid" >&2\nexit 1\n' > "$fx/bsd-pc/sysctl"
+chmod +x "$fx"/bsd-*/*
+bat() { # sysfs-dir path-prefix mode
+  RETROCRT_POWER_SUPPLY="$fx/$1" PATH="$2$PATH" sh "${ROOT}/adapters/tmux/battery" "$3"
+}
+bat_case() { # label expected sysfs-dir path-prefix mode
+  got=$(bat "$3" "$4" "$5")
+  if [ "$got" = "$2" ]; then
+    ok "battery $1 $5: ${got:-(nothing)}"
+  else
+    bad "battery $1 $5: expected '${2}' got '${got}'"
+  fi
+}
+bat_case "Arch laptop"  "#[fg=$GREEN]BAT 87%+" arch-laptop "" auto
+bat_case "Arch laptop"  "#[fg=$GREEN]BAT 87%+" arch-laptop "" on
+bat_case "Arch laptop"  ""                     arch-laptop "" off
+bat_case "Arch PC (gamepad battery only)" ""   arch-pc     "" auto
+bat_case "Arch PC (gamepad battery only)" "#[fg=$DIM]BAT --" arch-pc "" on
+bat_case "FreeBSD laptop" "#[fg=$AMBER]BAT 28%" none "$fx/bsd-laptop:" auto
+bat_case "FreeBSD PC"     ""                    none "$fx/bsd-pc:"     auto
+bat_case "FreeBSD PC"     ""                    none "$fx/bsd-pc:"     off
+bat_case "FreeBSD PC"     "#[fg=$DIM]BAT --"    none "$fx/bsd-pc:"     on
+rm -rf "$fx"
+
 if command -v tmux >/dev/null 2>&1; then
   sock=retrocrt-verify
   tmux -L "$sock" kill-server >/dev/null 2>&1 || true
@@ -243,6 +287,15 @@ if command -v tmux >/dev/null 2>&1; then
       *battery*) ok "tmux status-left calls battery" ;;
       *) bad "tmux status-left unexpected: ${left}" ;;
     esac
+    case "$msg" in
+      *'fill=#ffb020'*) ok "tmux prompt fills the line (tmux >= 3.7)" ;;
+      *) bad "tmux message-style has no fill: ${msg}" ;;
+    esac
+    [ "$(tmux -L "$sock" show -gv @retrocrt_battery 2>/dev/null)" = auto ] \
+      && ok "tmux @retrocrt_battery defaults to auto" || bad "tmux @retrocrt_battery is not auto"
+    tmux -L "$sock" set -g @retrocrt_battery off
+    [ "$(tmux -L "$sock" display -p '#{T:status-left}')" = "  " ] \
+      && ok "tmux @retrocrt_battery off: no battery (PC)" || bad "tmux @retrocrt_battery off still calls battery"
     right=$(tmux -L "$sock" show -gv status-right 2>/dev/null || true)
     case "$right" in
       *'%Y-%m-%d'*) ok "tmux status-right is date" ;;
@@ -279,6 +332,11 @@ if grep -Eo '#[0-9a-fA-F]{6}' "$TP" | grep -q '[A-F]'; then
   bad "$TP has uppercase hex (tmux expands #D, #F, ...)"
 else
   ok "$TP hex is lowercase"
+fi
+if grep -q 'client_utf8,\\ue0b0,' "$TP"; then
+  ok "$TP separators are \\u escapes"
+else
+  bad "$TP separators are not \\u escapes (raw glyphs or no UTF-8 fallback)"
 fi
 if command -v tmux >/dev/null 2>&1; then
   psock=retrocrt-verify-power
@@ -328,14 +386,38 @@ if command -v tmux >/dev/null 2>&1; then
       *) bad "power current window does not take the mode color" ;;
     esac
     # Empty B: the pill's separator goes straight onto C (BACKGROUND_ALT).
+    # display -p does not run #() jobs, so C is a fixed string here.
+    pt set -g @retrocrt_power_left_c 'C'
     pt set -g @retrocrt_power_left_b ''
     case "$(pt display -p '#{T:status-left}')" in
       *"$VISUAL_BG"*) bad "power empty B still draws VISUAL_BG" ;;
       *"#[fg=$CYAN]#[bg=$BACKGROUND_ALT]"*) ok "power empty section is skipped" ;;
       *) bad "power empty B: unexpected transition" ;;
     esac
-    [ "$(pt show -gv @retrocrt_power_sep_right)" = "$(printf '\356\202\260')" ] \
-      && ok "power separator is U+E0B0" || bad "power separator is not U+E0B0"
+    # A section that renders empty is hidden like an empty one (PC battery).
+    pt set -g @retrocrt_power_left_c '#{?0,x,}'
+    case "$(pt display -p '#{T:status-left}')" in
+      *"$BACKGROUND_ALT"*) bad "power section rendering empty still draws a segment" ;;
+      *) ok "power section rendering empty is hidden" ;;
+    esac
+    pt set -gu @retrocrt_power_left_c
+    pt source-file "${ROOT}/$TP" >/dev/null 2>&1 || true
+    case "$(pt show -gv @retrocrt_power_left_c)" in
+      *'battery #{@retrocrt_battery}'*) ok "power C passes @retrocrt_battery to the battery" ;;
+      *) bad "power C does not pass @retrocrt_battery" ;;
+    esac
+    [ "$(pt show -gv @retrocrt_battery)" = auto ] \
+      && ok "power @retrocrt_battery defaults to auto" || bad "power @retrocrt_battery is not auto"
+    pt set -g @retrocrt_battery off
+    [ "$(pt display -p '#{E:@retrocrt_power_show_c}')" = 0 ] \
+      && ok "power @retrocrt_battery off hides C (PC)" || bad "power @retrocrt_battery off does not hide C"
+    case "$(pt show -gv @retrocrt_power_sep_right)" in
+      *"$(printf '\356\202\260')"*) ok "power separator is U+E0B0" ;;
+      *) bad "power separator is not U+E0B0" ;;
+    esac
+    # No UTF-8 client (display -p has none): no glyph, '|' for thin.
+    [ -z "$(pt display -p '#{E:@retrocrt_power_sep_right}')" ] && [ "$(pt display -p '#{E:@retrocrt_power_sep_right_thin}')" = '|' ] \
+      && ok "power separators fall back without UTF-8" || bad "power separators have no non-UTF-8 fallback"
   fi
   tmux -L "$psock" kill-server >/dev/null 2>&1 || true
   # A section set before sourcing survives (set -o).

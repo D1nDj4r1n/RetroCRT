@@ -1,5 +1,10 @@
 # ~/.tmux.conf fragment — retrocrt
 # Prefix and binds stay yours. Status: battery left, date right.
+# Same lines on Arch Linux and FreeBSD.
+
+# Battery: auto (default) shows it only on a machine that has one.
+# set -g @retrocrt_battery on     # laptop: always shown
+# set -g @retrocrt_battery off    # PC: never shown, never read
 
 source-file ~/.config/retrocrt/adapters/tmux/retrocrt.conf
 
