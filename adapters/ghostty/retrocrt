@@ -1,4 +1,4 @@
-# retrocrt — Ghostty adapter
+# retrocrt — Ghostty adapter (optional; Kitty is the main terminal)
 # Canonical palette: ../../palette
 # Install to ~/.config/ghostty/themes/retrocrt
 # Enable with one line in ~/.config/ghostty/config:
