@@ -342,6 +342,10 @@ if command -v tmux >/dev/null 2>&1; then
       *'fill=#ffb020'*) ok "tmux prompt fills the line (tmux >= 3.7)" ;;
       *) bad "tmux message-style has no fill: ${msg}" ;;
     esac
+    case "$(tmux -L "$sock" show -gv terminal-features 2>/dev/null)" in
+      *'xterm-kitty:utf8'*) ok "tmux treats Kitty as UTF-8 (tmux >= 3.8)" ;;
+      *) bad "tmux terminal-features lacks xterm-kitty:utf8" ;;
+    esac
     [ "$(tmux -L "$sock" show -gv @retrocrt_battery 2>/dev/null)" = auto ] \
       && ok "tmux @retrocrt_battery defaults to auto" || bad "tmux @retrocrt_battery is not auto"
     tmux -L "$sock" set -g @retrocrt_battery off
@@ -359,8 +363,13 @@ else
 fi
 
 echo
-echo "=== tmux power (optional status line) ==="
+echo "=== tmux power (default status line) ==="
 TP=adapters/tmux/power.conf
+if grep -q '^source-file .*/adapters/tmux/power.conf' adapters/tmux/tmux.conf.fragment; then
+  ok "tmux.conf.fragment sources power.conf"
+else
+  bad "tmux.conf.fragment does not source power.conf (bar stays flat)"
+fi
 if grep -Eq '^[[:space:]]*(bind|bind-key|unbind|unbind-key|run|run-shell)[[:space:]]' "$TP"; then
   bad "$TP contains keybinds or run-shell"
 else
