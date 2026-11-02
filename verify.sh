@@ -137,7 +137,58 @@ else
 fi
 
 echo
-echo "=== ghostty theme ==="
+echo "=== kitty theme (main terminal) ==="
+KT=adapters/kitty/retrocrt.conf
+# Kitty has a tab bar, so BACKGROUND_ALT has a slot (inactive tabs).
+if need_hex "$KT" $CANON $VISUAL_BG $DIFF_DELETE_BG \
+     $BRIGHT_RED $BRIGHT_GREEN $BRIGHT_YELLOW $BRIGHT_BLUE $BRIGHT_MAGENTA $BRIGHT_CYAN $BRIGHT_WHITE; then
+  ok "$KT canonical colors"
+fi
+grep -q '^color6 #00d4c8$' "$KT" && ok "kitty cyan ANSI" || bad "kitty color6 is not CYAN"
+grep -q '^background #0a0e14$' "$KT" && ok "kitty background" || bad "kitty background is not BACKGROUND"
+grep -q '^cursor #00d4c8$' "$KT" && ok "kitty cursor is CYAN (NORMAL)" || bad "kitty cursor is not CYAN"
+grep -q '^active_tab_background #00d4c8$' "$KT" && ok "kitty active tab is CYAN" || bad "kitty active tab is not CYAN"
+kitty_n=0
+while read -r k; do
+  grep -q "^$k #" "$KT" || { bad "kitty missing $k"; kitty_n=1; }
+done <<EOF
+foreground
+selection_background
+color0
+color15
+inactive_tab_background
+bell_border_color
+EOF
+[ "$kitty_n" -eq 0 ] && ok "kitty has colors 0-15, selection, tabs, borders"
+# kitty.conf syntax: "key value", one per line; inline comments are not allowed.
+if grep -v '^[[:space:]]*#' "$KT" | grep -v '^[[:space:]]*$' | grep -Eqv '^[a-z0-9_]+ #[0-9a-f]{6}$'; then
+  bad "kitty adapter has a line that is not 'key #rrggbb'"
+else
+  ok "kitty lines are 'key #rrggbb'"
+fi
+kitty_hex_ok=1
+for h in $(grep -v '^[[:space:]]*#' "$KT" | grep -Eo '#[0-9a-f]{6}' | sort -u); do
+  if ! grep -Eiq "^[A-Z_]+=${h}\$" palette; then
+    bad "$KT uses $h which is not in palette"
+    kitty_hex_ok=0
+  fi
+done
+[ "$kitty_hex_ok" -eq 1 ] && ok "$KT hex values are in palette"
+if grep -Eq '^(font_|font_size|window_padding|background_opacity|shell_integration|include|map )' "$KT"; then
+  bad "kitty adapter contains font/padding/opacity/shell integration/binds"
+else
+  ok "kitty adapter is colors only"
+fi
+grep -q '^## name: retrocrt' "$KT" && ok "kitty theme is listed by kitty +kitten themes"
+if command -v kitty >/dev/null 2>&1; then
+  ok "kitty binary present"
+else
+  printf 'SKIP  kitty not installed (theme is static)\n'
+fi
+grep -q 'set \$term kitty' adapters/sway/sway.conf.fragment && ok "sway \$term is kitty" || bad "sway fragment does not set \$term kitty"
+
+echo
+echo "=== ghostty theme (optional) ==="
 grep -q 'palette = 6=#00d4c8' adapters/ghostty/retrocrt && ok "ghostty cyan ANSI"
 grep -q 'background = #0a0e14' adapters/ghostty/retrocrt && ok "ghostty background"
 if grep -Eq 'font-family|window-padding|background-opacity' adapters/ghostty/retrocrt; then

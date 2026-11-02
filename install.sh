@@ -1,6 +1,7 @@
 #!/bin/sh
 # retrocrt — install adapters (and, with --dotfiles, dotfiles/) into a home directory.
-# Default systems: Arch Linux and FreeBSD. Sway is the WM, Ghostty the terminal.
+# Default systems: Arch Linux and FreeBSD. Sway is the WM, Kitty the terminal
+# on every device.
 # Does not install packages, plugin managers, or fonts; --packages only prints commands.
 
 set -eu
@@ -23,18 +24,18 @@ install.sh [options]
   --help         show this help
 
 Default systems: Arch Linux and FreeBSD (POSIX sh, base utilities only).
-Main stack: Sway + Ghostty + tmux + zsh + Vim/Neovim.
+Main stack: Sway + Kitty + tmux + zsh + Vim/Neovim, on every device.
 
 Installs visual adapters:
   Vim colorscheme, Neovim colorscheme + oil highlights,
-  Yazi theme.toml, Ghostty theme, foot theme, zsh color fragment, tmux styles
+  Yazi theme.toml, Kitty theme, Ghostty and foot themes, zsh color fragment, tmux styles
   (+ optional powerline status line),
   Sway colors, mako, swaylock, swaynag, HikaruWM colors.
   Sway colors are included, not a full sway config.
 
 Existing files are moved to <name>.bak.<timestamp> before they are replaced.
 
-Adapters do not change: fonts, Ghostty padding/opacity, bindkey,
+Adapters do not change: fonts, Kitty padding/opacity, bindkey,
 Oh My Zsh plugin lists, the body of ~/.p10k.zsh, tmux keybinds,
 or Sway keybinds/outputs. --dotfiles installs your own vimrc, zshrc,
 and Neovim config from this repository; it never touches ~/.p10k.zsh.
@@ -71,7 +72,7 @@ print_packages() {
   if [ "$SYSTEM" != freebsd ]; then
     cat <<'EOF'
 # Arch Linux (as root)
-pacman -S --needed sway swaylock swayidle swaybg mako ghostty foot wl-clipboard \
+pacman -S --needed sway swaylock swayidle swaybg mako kitty foot wl-clipboard \
     tmux zsh git fzf vim neovim yazi ttf-jetbrains-mono-nerd
 
 EOF
@@ -80,7 +81,7 @@ EOF
     cat <<EOF
 # FreeBSD (as root). Sway needs seatd and the video group (FreeBSD Handbook,
 # Wayland chapter). XDG_RUNTIME_DIR is set automatically since FreeBSD 14.1.
-pkg install sway swaylock swayidle swaybg mako ghostty foot wl-clipboard seatd drm-kmod \\
+pkg install sway swaylock swayidle swaybg mako kitty foot wl-clipboard seatd drm-kmod \\
     tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
 sysrc seatd_enable=YES
 service seatd start
@@ -239,7 +240,11 @@ link_or_copy "$DEST/adapters/nvim/colors/retrocrt.lua" "$HOME/.config/nvim/color
 # Yazi adapter (theme only)
 link_or_copy "$DEST/adapters/yazi/theme.toml" "$HOME/.config/yazi/theme.toml"
 
-# Ghostty adapter (theme file only; does not edit font/padding/opacity)
+# Kitty adapter, main terminal (theme file only; does not edit kitty.conf)
+run mkdir -p "$HOME/.config/kitty/themes"
+link_or_copy "$DEST/adapters/kitty/retrocrt.conf" "$HOME/.config/kitty/themes/retrocrt.conf"
+
+# Ghostty adapter, optional (theme file only; does not edit font/padding/opacity)
 run mkdir -p "$HOME/.config/ghostty/themes"
 link_or_copy "$DEST/adapters/ghostty/retrocrt" "$HOME/.config/ghostty/themes/retrocrt"
 
@@ -282,12 +287,12 @@ fi
 echo
 echo "Add these lines if they are not already present:"
 echo
-echo "  ghostty, main terminal (~/.config/ghostty/config):"
-echo "    theme = retrocrt"
+echo "  kitty, main terminal on every device (~/.config/kitty/kitty.conf):"
+echo "    include themes/retrocrt.conf"
 echo
 echo "  sway, main WM (~/.config/sway/config; start from the default config:"
 echo "  Arch /etc/sway/config, FreeBSD /usr/local/etc/sway/config):"
-echo "    set \$term ghostty        # the default config sets foot"
+echo "    set \$term kitty          # the default config sets foot"
 echo "    include ${DEST}/adapters/sway/colors"
 echo "    # existing bar: copy adapters/sway/bar-colors into colors { }"
 echo "    # no existing bar: include ${DEST}/adapters/sway/bar"
@@ -319,6 +324,11 @@ fi
 echo "  foot, fallback terminal (~/.config/foot/foot.ini, top of file):"
 echo "    include=~/.config/foot/themes/retrocrt"
 echo
+if command -v ghostty >/dev/null 2>&1 || [ -d "$HOME/.config/ghostty" ]; then
+  echo "  ghostty, optional (~/.config/ghostty/config):"
+  echo "    theme = retrocrt"
+  echo
+fi
 if [ "$HIKARU_CONF" -eq 1 ] || command -v hikaru >/dev/null 2>&1 || [ -d "$HOME/.config/hikaru" ]; then
   echo "  hikaru, optional WM (~/.config/hikaru/hikaru.conf):"
   echo "    re-run with --hikaru-conf, or replace the five color-* lines with"

@@ -4,7 +4,7 @@ Universal visual system for this workstation.
 
 Not a product theme pack. Not Warehouse OS / WOS. One palette, semantic roles, small adapters.
 
-Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main terminal: **Ghostty**.
+Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main terminal: **Kitty**, on every device.
 
 ```text
                     retrocrt
@@ -17,8 +17,8 @@ Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main termina
        │               │               │
        │            oil.nvim           │
        │                               │
-       └─────────── Ghostty ───────────┘
-                       │        (foot: fallback, sway's default $term)
+       └──────────── Kitty ────────────┘
+                       │        (foot: fallback, sway's default $term; Ghostty: optional)
                       tmux              (power status line: optional)
                        │
                       zsh
@@ -41,6 +41,7 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 | seat for Sway | logind (systemd) | `seatd` service + user in `video` group |
 | `XDG_RUNTIME_DIR` | set by logind | set automatically since FreeBSD 14.1 |
 | GPU | kernel driver | `drm-kmod` + `kld_list` (`i915kms`, `amdgpu`, `radeonkms`) |
+| Kitty (main terminal) | `kitty` | `kitty` (port built with Wayland, runs natively under Sway) |
 | battery (tmux, zsh prompt) | `/sys/class/power_supply/`: tmux takes a type Battery that is not scope Device (mouse, gamepad); zsh `BAT*` | `sysctl hw.acpi.battery.*`; a PC without an ACPI battery has no such node |
 | tmux | 3.4 or newer; since 3.7 the prompt needs `fill`, which `retrocrt.conf` sets | same (ports: 3.8) |
 | Vim system clipboard | `+clipboard` in `vim --version` (`gvim` has it): native; otherwise the `wl-copy` fallback | console `vim` has no `+clipboard`: `wl-copy` fallback; `vim-gtk3` has it |
@@ -49,7 +50,7 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 ./install.sh --packages      # prints pacman or pkg + git clone lines for this system
 ```
 
-It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, ghostty, foot, wl-clipboard, tmux, zsh, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems (FreeBSD has no Powerlevel10k port).
+It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, kitty, foot, wl-clipboard, tmux, zsh, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems (FreeBSD has no Powerlevel10k port).
 
 FreeBSD steps, from the Handbook's Wayland chapter: `sysrc seatd_enable=YES`, `service seatd start`, `pw groupmod video -m <user>`.
 
@@ -70,7 +71,7 @@ set -g @retrocrt_battery off   # PC
 
 `auto` already does the right thing on both; `on` / `off` pin it. `./install.sh` says which one this machine looks like. The zsh prompt needs no option: `battery_info` shows nothing when there is no battery.
 
-Sway: copy the default config, change its terminal line to `set $term ghostty` (the default is `foot`), then `include` the retrocrt colors (see INSTALL).
+Sway: copy the default config, change its terminal line to `set $term kitty` (the default is `foot`), then `include` the retrocrt colors (see INSTALL).
 
 ## NAME
 
@@ -185,6 +186,20 @@ tmux power mapping (optional `adapters/tmux/power.conf`, see TMUX POWER):
 | bell | RED on DIFF_DELETE_BG (as the swaybar urgent workspace) |
 | battery (segment C) | GREEN / AMBER / RED |
 
+Kitty mapping:
+
+| Kitty | Role |
+| --- | --- |
+| cursor | NORMAL / CYAN |
+| selection | VISUAL_BG |
+| active tab | BACKGROUND on CYAN |
+| inactive tab | DIM on BACKGROUND_ALT |
+| tab bar | BACKGROUND (as the swaybar) |
+| active / inactive / bell border | CYAN / DIM / RED |
+| visual bell | DIFF_DELETE_BG |
+| URL | BLUE (as Underlined in Neovim) |
+| marks 1 / 2 / 3 | AMBER / CYAN / MAGENTA (as tmux copy-mode match / current / mark) |
+
 Sway mapping:
 
 | Sway | Role |
@@ -221,7 +236,8 @@ HikaruWM mapping:
 | Neovim | `adapters/nvim/` | IDE theme + oil.nvim + diagnostics |
 | oil.nvim | groups in the Neovim adapter | in-editor explorer |
 | Yazi | `adapters/yazi/theme.toml` | terminal file manager |
-| Ghostty | `adapters/ghostty/retrocrt` | main terminal ANSI/theme |
+| Kitty | `adapters/kitty/retrocrt.conf` | main terminal on every device: ANSI, cursor, selection, tabs, borders |
+| Ghostty (optional) | `adapters/ghostty/retrocrt` | terminal ANSI/theme |
 | foot | `adapters/foot/retrocrt` | fallback terminal (sway's default `$term`; `include=` file) |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
 | tmux power (optional) | `adapters/tmux/power.conf` | powerline status line: mode pill, sections, battery left, date right |
@@ -250,7 +266,7 @@ Personal configs that use the adapters. Installed only with `./install.sh --dotf
 
 Portable on both systems:
 
-- vimrc creates `~/.vim/undo` (Vim does not). Without `+clipboard`, unnamed yanks go to `wl-copy` under Sway; paste with Ctrl+Shift+V in Ghostty.
+- vimrc creates `~/.vim/undo` (Vim does not). Without `+clipboard`, unnamed yanks go to `wl-copy` under Sway; paste with Ctrl+Shift+V in Kitty.
 - Neovim `clipboard=unnamedplus` uses `wl-copy`/`wl-paste` (`wl-clipboard`).
 - zshrc battery reads sysfs on Arch and `sysctl` on FreeBSD. Powerlevel10k rebuilds `RPROMPT` on every prompt, so with p10k the battery is a p10k segment (`battery_info`) appended to the right prompt from zshrc; `~/.p10k.zsh` is not edited. p10k's own `battery` segment covers Linux and macOS only.
 - zshrc says what to clone when Oh My Zsh is missing; `PATH` uses `$HOME/.local/bin`.
@@ -324,7 +340,7 @@ If the application cannot use the full palette, map the closest roles and note t
 
 Known deviation: foot, like Ghostty, has a single background; `BACKGROUND_ALT` is unused and selection uses `VISUAL_BG`. The file uses `[colors]` (deprecated alias of `[colors-dark]` in foot >= 1.24) so older foot loads it too.
 
-Known deviation: Ghostty has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
+Known deviation: Ghostty (optional) has a single background. `BACKGROUND_ALT` is not assigned to an ANSI slot. Selection uses `VISUAL_BG`.
 
 Known deviation: Hikaru has one `color-urgent` key for both urgent views and non-NORMAL modes (resize), so it is AMBER, not RED as in Sway. Hikaru draws no bar or titlebar and `color-*` accepts only `#rrggbb`. A personal `~/.config/mako/config` replaces Hikaru's shipped mako layout entirely; the retrocrt mako adapter is colors only, so re-add font/size/anchor keys if needed. waylock has no config file, so its flags live in `hikaru-lock`; the adapter documents them but `install.sh` does not edit that script.
 
@@ -357,14 +373,15 @@ POSIX sh with base utilities, the same on Arch Linux and FreeBSD. No package ins
 Then add, if missing:
 
 ```text
-# ~/.config/ghostty/config — main terminal
-theme = retrocrt
+# ~/.config/kitty/kitty.conf — main terminal on every device
+include themes/retrocrt.conf
+# or: kitty +kitten themes, then retrocrt under User
 ```
 
 ```text
 # ~/.config/sway/config — main WM; copy the default config first
 # (Arch /etc/sway/config, FreeBSD /usr/local/etc/sway/config)
-set $term ghostty
+set $term kitty
 include ~/.config/retrocrt/adapters/sway/colors
 # existing bar: copy adapters/sway/bar-colors into colors { }
 # no bar yet: include ~/.config/retrocrt/adapters/sway/bar
@@ -413,7 +430,7 @@ zsh-syntax-highlighting     LAST among plugins
 source retrocrt.zsh         color overlay
 ```
 
-`install.sh` does not rewrite `~/.p10k.zsh`, Ghostty font/padding/opacity, editor keymaps, tmux keybinds, or Sway keybinds/outputs.
+`install.sh` does not rewrite `~/.p10k.zsh`, `kitty.conf` (font/padding/opacity), editor keymaps, tmux keybinds, or Sway keybinds/outputs.
 
 ## VALIDATE
 
@@ -429,14 +446,14 @@ Manual checks:
 vim  -c 'colorscheme retrocrt'
 nvim -c 'colorscheme retrocrt'
 yazi
-# Ghostty: theme = retrocrt
+# Kitty: include themes/retrocrt.conf; cursor CYAN, active tab CYAN, selection VISUAL_BG
 # zsh: open a prompt, try vi-mode, a valid command, a typo, a suggestion; battery on the right
 # tmux: battery left (laptop), none (PC), date right; copy-mode MAGENTA
 # tmux power: pill CYAN NORMAL; prefix AMBER PREFIX; copy-mode MAGENTA COPY; arrows close over empty sections
-# sway: set $term ghostty; include adapters/sway/colors; reload
+# sway: set $term kitty; include adapters/sway/colors; reload
 # mako: makoctl reload
 # swaylock / swaynag: configs in ~/.config/
-# clipboard: yank in vim / nvim, paste in Ghostty with Ctrl+Shift+V
+# clipboard: yank in vim / nvim, paste in Kitty with Ctrl+Shift+V
 ```
 
 ---
@@ -491,7 +508,7 @@ None in-repo. Possible on the workstation: an existing `~/.vim/colors/retrocrt.v
 
 ## USER-SPECIFIC (untouched)
 
-- Fonts, font size, Ghostty padding/opacity/window behavior
+- Fonts, font size, Kitty (and Ghostty) padding/opacity/window behavior
 - Full `~/.p10k.zsh` layout
 - Oh My Zsh plugin list and `bindkey -v`
 - Full Vimrc / Neovim IDE (LSP, language packs, keymaps)

@@ -46,7 +46,7 @@ if has('clipboard')
 elseif executable('wl-copy') && !empty($WAYLAND_DISPLAY)
   " Vim bez +clipboard (FreeBSD: pakiet vim, Arch: vim zamiast gvim) ignoruje
   " unnamedplus. Pod Sway kopiuj nienazwany rejestr przez wl-copy.
-  " Wklejanie ze schowka: Ctrl+Shift+V w Ghostty.
+  " Wklejanie ze schowka: Ctrl+Shift+V w Kitty.
   augroup RetroClipboard
     autocmd!
     autocmd TextYankPost * if v:event.regname ==# '' | call system('wl-copy >/dev/null 2>&1', getreg('"')) | endif
