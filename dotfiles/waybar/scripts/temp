@@ -6,7 +6,7 @@
 . "$(dirname -- "$0")/lib.sh"
 
 n=${1:-0} warn=${2:-70} crit=${3:-85}
-case $n$warn$crit in *[!0-9]*) emit '--' off 'Temperatura: złe argumenty'; exit 0 ;; esac
+case $n$warn$crit in *[!0-9]*) emit '--' off 'Temperature: bad arguments'; exit 0 ;; esac
 
 src=dev.cpu.$n.temperature
 v=$(sysctl -n "$src" 2> /dev/null)
@@ -16,11 +16,11 @@ if [ -z "$v" ]; then
 fi
 case $v in
   [0-9]*C) ;;
-  *) emit '--' off 'Temperatura: brak czujnika (kld_list: coretemp lub amdtemp)'; exit 0 ;;
+  *) emit '--' off 'Temperature: no sensor (kld_list: coretemp or amdtemp)'; exit 0 ;;
 esac
 t=${v%C}
 t=${t%%.*}
-case $t in ''|*[!0-9]*) emit '--' off "Temperatura: nieznany format ($src)"; exit 0 ;; esac
+case $t in ''|*[!0-9]*) emit '--' off "Temperature: unknown format ($src)"; exit 0 ;; esac
 if [ "$t" -ge "$crit" ]; then cls=czerwony
 elif [ "$t" -ge "$warn" ]; then cls=zolty
 else cls=zielony; fi

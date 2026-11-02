@@ -7,7 +7,7 @@
     "format": "{:%H:%M}",
     "timezones": ["", "Etc/UTC"],
     "timezone-tooltip-format": "UTC      {:%Y-%m-%dT%H:%MZ}",
-    "tooltip-format": "lokalnie {:%Y-%m-%d %H:%M %Z}\n{tz_list}"
+    "tooltip-format": "local    {:%Y-%m-%d %H:%M %Z}\n{tz_list}"
   },
   "cpu": {
     "interval": 5,

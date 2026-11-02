@@ -613,7 +613,7 @@ wbl=$wbf/calls
 for t in notify-send kitty swaylock sudo iced-tui; do wb_tool act "$t" "echo \"$t \$*\" >> $wbl"; done
 wb_tool nottui notify-send "echo \"notify-send \$*\" >> $wbl"
 : > "$wbl"; env -i HOME="$wbf" PATH="$wbf/nottui:/usr/bin:/bin" sh "${ROOT}/$WD/scripts/ice-action" raise
-grep -q 'notify-send.*iced-tui nie jest' "$wbl" && ok "waybar ICE action without iced-tui: a message, no error" || bad "waybar ICE action without iced-tui"
+grep -q 'notify-send.*iced-tui is not installed' "$wbl" && ok "waybar ICE action without iced-tui: a message, no error" || bad "waybar ICE action without iced-tui"
 : > "$wbl"; env -i HOME="$wbf" PATH="$wbf/act:/usr/bin:/bin" sh "${ROOT}/$WD/scripts/ice-action" raise
 grep -qx 'iced-tui --quickhack 4' "$wbl" && ok "waybar ICE raise runs iced-tui --quickhack 4" || bad "waybar ICE raise: $(cat "$wbl")"
 : > "$wbl"; env -i HOME="$wbf" PATH="$wbf/act:/usr/bin:/bin" JACK_STATE_DIR="$wbf/jack" sh "${ROOT}/$WD/scripts/blackwall-slide"

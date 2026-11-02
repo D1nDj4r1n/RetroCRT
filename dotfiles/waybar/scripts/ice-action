@@ -7,7 +7,7 @@
 . "$(dirname -- "$0")/lib.sh"
 
 if ! has iced-tui; then
-  notify 'ICE' 'iced-tui nie jest jeszcze zainstalowany.'
+  notify 'ICE' 'iced-tui is not installed yet.'
   exit 0
 fi
 
@@ -15,18 +15,18 @@ case ${1-} in
   tui)
     if has kitty; then exec kitty --class iced-tui --title iced-tui iced-tui; fi
     if has foot; then exec foot --app-id iced-tui iced-tui; fi
-    notify 'ICE' 'Brak terminala (kitty, foot).'
+    notify 'ICE' 'No terminal found (kitty, foot).'
     ;;
   raise)
-    if iced-tui --quickhack 4; then notify 'ICE' 'Poziom podniesiony.'
-    else notify 'ICE' "Podniesienie poziomu nie powiodło się (kod $?)."; fi
+    if iced-tui --quickhack 4; then notify 'ICE' 'Level raised.'
+    else notify 'ICE' "Raising the level failed (exit $?)."; fi
     ;;
   snapshot)
-    if iced-tui --quickhack 2; then notify 'ICE' 'Snapshot wykonany.'
-    else notify 'ICE' "Snapshot nie powiódł się (kod $?)."; fi
+    if iced-tui --quickhack 2; then notify 'ICE' 'Snapshot taken.'
+    else notify 'ICE' "Snapshot failed (exit $?)."; fi
     ;;
   *)
-    notify 'ICE' 'Nieznana akcja.'
+    notify 'ICE' 'Unknown action.'
     exit 2
     ;;
 esac

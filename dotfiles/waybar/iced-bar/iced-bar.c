@@ -426,14 +426,14 @@ render(const struct state *st, struct buf *b)
 	if (mode == MODE_BLACKWALL) {
 		if (st->session) {
 			iso_utc(st->session_mtime, when, sizeof when);
-			puts_raw(b, "{\"text\":\"ZA MUREM\",\"alt\":\"session\",\"tooltip\":\"");
-			puts_json(b, "Blackwall: sesja Tails (bhyve, VLAN 40)\nod ");
+			puts_raw(b, "{\"text\":\"BEYOND THE WALL\",\"alt\":\"session\",\"tooltip\":\"");
+			puts_json(b, "Blackwall: Tails session (bhyve, VLAN 40)\nsince ");
 			puts_json(b, when);
-			puts_json(b, "\nPPM: Slide");
+			puts_json(b, "\nRight-click: Slide");
 			puts_raw(b, "\",\"class\":[\"czarny\"]}\n");
 		} else {
 			puts_raw(b, "{\"text\":\"BW\",\"alt\":\"off\",\"tooltip\":\"");
-			puts_json(b, "Blackwall: brak sesji");
+			puts_json(b, "Blackwall: no session");
 			puts_raw(b, "\",\"class\":[\"off\"]}\n");
 		}
 		return;
@@ -469,20 +469,20 @@ render(const struct state *st, struct buf *b)
 		puts_json(b, st->fields[i]);
 	}
 	if (!st->dir_ok) {
-		puts_json(b, "\nbrak katalogu ");
+		puts_json(b, "\nno directory ");
 		puts_json(b, state_dir);
 	} else if (st->level == F_MISSING)
-		puts_json(b, "\nbrak pliku level");
+		puts_json(b, "\nno level file");
 	else if (st->level == F_INVALID)
-		puts_json(b, "\nniepoprawna tre\xc5\x9b\xc4\x87 pliku level");
+		puts_json(b, "\ninvalid level file");
 	else if (st->level == F_UNREADABLE)
-		puts_json(b, "\nbrak dost\xc4\x99pu do pliku level");
+		puts_json(b, "\nlevel file not readable");
 	if (st->armed) {
 		long long left = st->deadline - now_s();
 		if (left < 0)
 			left = 0;
 		iso_utc(st->deadline, when, sizeof when);
-		(void)snprintf(line, sizeof line, "\nWy\xc5\x82\xc4\x85" "czenie za %lld s (%s)", left, when);
+		(void)snprintf(line, sizeof line, "\nShutdown in %lld s (%s)", left, when);
 		puts_json(b, line);
 	}
 

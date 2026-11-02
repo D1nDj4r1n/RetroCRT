@@ -6,12 +6,12 @@
   <object class="GtkMenu" id="menu">
     <child>
       <object class="GtkMenuItem" id="raise">
-        <property name="label">Podnieś poziom</property>
+        <property name="label">Raise level</property>
       </object>
     </child>
     <child>
       <object class="GtkMenuItem" id="snapshot">
-        <property name="label">Snapshot teraz</property>
+        <property name="label">Snapshot now</property>
       </object>
     </child>
   </object>

@@ -8,13 +8,13 @@ vol=$(mixer vol.volume 2> /dev/null)   # vol.volume=0.75:0.75
 mute=$(mixer vol.mute 2> /dev/null)    # vol.mute=off
 case $vol in
   vol.volume=[0-9]*) ;;
-  *) emit '--' off 'Dźwięk: brak miksera OSS (mixer vol)'; exit 0 ;;
+  *) emit '--' off 'Sound: no OSS mixer (mixer vol)'; exit 0 ;;
 esac
 left=${vol#*=}
 left=${left%%:*}
 pct=$(printf '%s\n' "$left" | awk '{ printf "%d", $1 * 100 + 0.5 }')
 if [ "$mute" = vol.mute=on ]; then
-  emit 'mute' off "Dźwięk: wyciszony ($pct%)" "$pct"
+  emit 'mute' off "Sound: muted ($pct%)" "$pct"
 else
-  emit "$pct%" zielony "Dźwięk: $pct% (OSS, mixer vol)" "$pct"
+  emit "$pct%" zielony "Sound: $pct% (OSS, mixer vol)" "$pct"
 fi

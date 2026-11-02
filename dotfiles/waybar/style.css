@@ -1,17 +1,17 @@
 /* Projekt Blackwall - Waybar style (FreeBSD, GTK 3 CSS).
  *
  * Colour carries meaning: the ICE and Blackwall modules are filled with
- * their state colour; everything else stays calm and only turns ZOLTY or
+ * their state colour; everything else stays calm and only turns ZOLTY (yellow) or
  * CZERWONY on a fault. State classes shared by the custom modules:
  *   off  zielony  zolty  czerwony  czarny  armed
  * (cpu and memory use Waybar's own warning / critical).
  */
 
-@define-color bw_bg       #0c0f13;  /* tło */
-@define-color bw_surface  #12171d;  /* powierzchnia */
-@define-color bw_line     #26323d;  /* linia */
-@define-color bw_text     #d9e2ea;  /* tekst */
-@define-color bw_dim      #8f9eac;  /* tekst przygaszony */
+@define-color bw_bg       #0c0f13;  /* background */
+@define-color bw_surface  #12171d;  /* surface */
+@define-color bw_line     #26323d;  /* line */
+@define-color bw_text     #d9e2ea;  /* text */
+@define-color bw_dim      #8f9eac;  /* muted text */
 @define-color bw_ice      #4fd6e0;  /* akcent ICE */
 @define-color bw_zielony  #5fd38a;
 @define-color bw_zolty    #e3c84f;

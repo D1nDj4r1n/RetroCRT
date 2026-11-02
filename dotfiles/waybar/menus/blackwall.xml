@@ -4,7 +4,7 @@
   <object class="GtkMenu" id="menu">
     <child>
       <object class="GtkMenuItem" id="slide">
-        <property name="label">Slide (wyjście z sesji i blokada)</property>
+        <property name="label">Slide (leave the session and lock)</property>
       </object>
     </child>
   </object>

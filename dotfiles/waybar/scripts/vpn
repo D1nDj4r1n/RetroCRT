@@ -15,7 +15,7 @@
 . "$(dirname -- "$0")/lib.sh"
 
 if ! has vpnmgr-bar; then
-  emit 'VPN --' off 'VPN: moduł gotowy, brak vpnmgr-bar (format w scripts/vpn)'
+  emit 'VPN --' off 'VPN: ready, waiting for vpnmgr-bar (format in scripts/vpn)'
   exit 0
 fi
 
@@ -25,7 +25,7 @@ else
   data=$(vpnmgr-bar 2> /dev/null | head -c 1025)
 fi
 if [ ${#data} -gt 1024 ] || ! kv_line UP CONNECTING DOWN ERROR; then
-  emit 'VPN ?' czerwony 'VPN: niepoprawna odpowiedź vpnmgr-bar'
+  emit 'VPN ?' czerwony 'VPN: invalid answer from vpnmgr-bar'
   exit 0
 fi
 

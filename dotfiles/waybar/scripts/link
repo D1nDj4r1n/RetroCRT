@@ -10,7 +10,7 @@ eth=${1-}
 wg=${2:-wgmgmt}
 
 if ! has ifconfig; then
-  emit 'NET --' off 'brak ifconfig'
+  emit 'NET --' off 'no ifconfig'
   exit 0
 fi
 
@@ -38,7 +38,7 @@ tip=
 
 if [ -z "$eth" ] || ! info=$(ifconfig "$eth" 2> /dev/null); then
   etext="eth --"; level=2
-  tip="Ethernet: brak karty${eth:+ $eth}"
+  tip="Ethernet: no card${eth:+ $eth}"
 else
   ip=$(printf '%s\n' "$info" | awk '$1 == "inet" { print $2; exit }')
   status=$(printf '%s\n' "$info" | sed -n 's/^[[:space:]]*status: //p' | head -n 1)
@@ -48,18 +48,18 @@ else
   elif [ -n "$status" ] && [ "$status" != active ]; then
     etext="$eth $status"; level=2
   elif [ -z "$ip" ]; then
-    etext="$eth bez IP"; level=1
+    etext="$eth no IP"; level=1
   else
     etext=$eth
   fi
-  tip="Ethernet $eth: ${status:-?}, ${ip:-brak IPv4}${media:+
+  tip="Ethernet $eth: ${status:-?}, ${ip:-no IPv4}${media:+
 $media}"
 fi
 
 if ! winfo=$(ifconfig "$wg" 2> /dev/null); then
   wtext="wg --"; [ "$level" -lt 1 ] && level=1
   tip="$tip
-$wg: brak interfejsu"
+$wg: no interface"
 elif ! is_up "$winfo"; then
   wtext="wg down"; [ "$level" -lt 1 ] && level=1
   tip="$tip
@@ -68,7 +68,7 @@ else
   wip=$(printf '%s\n' "$winfo" | awk '$1 == "inet" { print $2; exit }')
   wtext=wg
   tip="$tip
-$wg: UP, ${wip:-brak IPv4}"
+$wg: UP, ${wip:-no IPv4}"
 fi
 
 case $level in

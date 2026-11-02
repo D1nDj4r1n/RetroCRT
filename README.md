@@ -343,7 +343,7 @@ tmux display -p 'utf8=#{client_utf8} term=#{client_termname} tmux=#{version}'
 
 ## WAYBAR
 
-FreeBSD only (Forteca, FreeBSD 15, sway); Arch keeps swaybar. The bar is the everyday bar and the status display of Projekt Blackwall. Everything is a dotfile under `dotfiles/waybar/`, installed by `./install.sh --dotfiles` on FreeBSD (`RETROCRT_SYSTEM=freebsd` forces it elsewhere). The full Polish guide (commands, file by file, test plan) is `dotfiles/waybar/README.md`.
+FreeBSD only (Forteca, FreeBSD 15, sway); Arch keeps swaybar. The bar is the everyday bar and the status display of Projekt Blackwall. Everything is a dotfile under `dotfiles/waybar/`, installed by `./install.sh --dotfiles` on FreeBSD (`RETROCRT_SYSTEM=freebsd` forces it elsewhere). The full guide (commands, file by file, test plan, checklist) is `dotfiles/waybar/README.md`.
 
 ```text
 [ICE ZIELONY][BW][1 2 3][resize]        12:05        [em0 · wg][VPN --][ZFS][CPU 4%][MEM 31%][TMP 45°C][VOL 75%][pl][idle]
@@ -362,7 +362,7 @@ FreeBSD only (Forteca, FreeBSD 15, sway); Arch keeps swaybar. The bar is the eve
 | Module | Source on FreeBSD | Note |
 | --- | --- | --- |
 | `custom/ice` | `/var/run/iced/level`, `countdown` via `iced-bar` (kqueue) or `scripts/iced-bar.sh` (polls 5 s) | untrusted content: validated, JSON- and markup-escaped |
-| `custom/blackwall` | `/var/run/jack/session` (existence only) | `ZA MUREM`; Slide: `sudo -n jack slide`, then `swaylock -f` |
+| `custom/blackwall` | `/var/run/jack/session` (existence only) | `BEYOND THE WALL`; Slide: `sudo -n jack slide`, then `swaylock -f` |
 | `custom/link` | `ifconfig` (Ethernet, `wgmgmt`) | no `network` module: the port is built without libnl |
 | `custom/vpn` | `vpnmgr-bar` (to be written; format in `scripts/vpn`) | `vpnmgr` itself is never called |
 | `custom/zfs` | `zpool status -x`, every 60 s | no root |
@@ -504,7 +504,7 @@ yazi
 # tmux power: pill CYAN NORMAL; prefix AMBER PREFIX; copy-mode MAGENTA COPY; arrows close over empty sections
 # sway: set $term kitty; include adapters/sway/colors; reload
 # mako: makoctl reload
-# waybar (FreeBSD): see dotfiles/waybar/README.md (Polish; tests for every ICE state)
+# waybar (FreeBSD): see dotfiles/waybar/README.md (tests for every ICE state)
 # swaylock / swaynag: configs in ~/.config/
 # clipboard: yank in vim / nvim, paste in Kitty with Ctrl+Shift+V
 ```

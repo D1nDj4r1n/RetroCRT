@@ -5,7 +5,7 @@
 . "$(dirname -- "$0")/lib.sh"
 
 if ! has zpool; then
-  emit 'ZFS --' off 'ZFS: brak polecenia zpool'
+  emit 'ZFS --' off 'ZFS: no zpool command'
   exit 0
 fi
 out=$(zpool status -x 2>&1)
@@ -15,10 +15,10 @@ case $out in
   'all pools are healthy')
     emit 'ZFS' zielony 'ZFS: all pools are healthy' ;;
   'no pools available'*)
-    emit 'ZFS --' off 'ZFS: brak pul' ;;
+    emit 'ZFS --' off 'ZFS: no pools' ;;
   *)
     if [ "$rc" -ne 0 ] && [ -z "$out" ]; then
-      emit 'ZFS ?' off 'ZFS: zpool status nie odpowiada'
+      emit 'ZFS ?' off 'ZFS: zpool status gave no answer'
     else
       emit 'ZFS !' czerwony "$out"
     fi

@@ -12,11 +12,11 @@
     "format": "{short}",
     "tooltip-format": "{long}"
   },
-  // Activated = the screen does not lock itself: shown in ŻÓŁTY (style.css).
+  // Activated = the screen does not lock itself: shown in ZOLTY yellow (style.css).
   "idle_inhibitor": {
     "format": "{icon}",
     "format-icons": { "activated": "WAKE", "deactivated": "idle" },
-    "tooltip-format-activated": "Bezczynność wstrzymana: ekran się NIE zablokuje",
-    "tooltip-format-deactivated": "Bezczynność: normalnie (blokada działa)"
+    "tooltip-format-activated": "Idle inhibited: the screen will NOT lock",
+    "tooltip-format-deactivated": "Idle: normal (the lock works)"
   }
 }

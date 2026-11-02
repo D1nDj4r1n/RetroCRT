@@ -95,11 +95,11 @@ render_blackwall() {
   f=$jack_dir/session
   if [ -f "$f" ] && [ ! -L "$f" ]; then
     m=$(mtime "$f")
-    printf '{"text":"ZA MUREM","alt":"session","tooltip":"%s","class":["czarny"]}' \
-      "$(json "Blackwall: sesja Tails (bhyve, VLAN 40)${nl}od $(utc "${m:-0}")${nl}PPM: Slide")"
+    printf '{"text":"BEYOND THE WALL","alt":"session","tooltip":"%s","class":["czarny"]}' \
+      "$(json "Blackwall: Tails session (bhyve, VLAN 40)${nl}since $(utc "${m:-0}")${nl}Right-click: Slide")"
   else
     printf '{"text":"BW","alt":"off","tooltip":"%s","class":["off"]}' \
-      "$(json 'Blackwall: brak sesji')"
+      "$(json 'Blackwall: no session')"
   fi
 }
 
@@ -107,14 +107,14 @@ render_ice() {
   armed=0 word= fields= reason=
   # As iced-bar.c: the directory must be openable (read and search).
   if [ ! -d "$ice_dir" ] || [ ! -r "$ice_dir" ] || [ ! -x "$ice_dir" ]; then
-    reason="brak katalogu $ice_dir"
+    reason="no directory $ice_dir"
   else
     read_small "$ice_dir/level"
     [ "$st" = valid ] && parse_level
     case $st in
-      missing) reason='brak pliku level' ;;
-      invalid) reason='niepoprawna treść pliku level'; word= fields= ;;
-      unreadable) reason='brak dostępu do pliku level' ;;
+      missing) reason='no level file' ;;
+      invalid) reason='invalid level file'; word= fields= ;;
+      unreadable) reason='level file not readable' ;;
     esac
     read_small "$ice_dir/countdown"
     if [ "$st" = valid ] && parse_countdown; then armed=1; fi
@@ -134,7 +134,7 @@ render_ice() {
     [ "$left" -lt 0 ] && left=0
     text="${word:-ICE} ${left}s"
     alt=armed
-    tip="${tip}${nl}Wyłączenie za $left s ($(utc "$deadline"))"
+    tip="${tip}${nl}Shutdown in $left s ($(utc "$deadline"))"
     class="\"$cls\",\"armed\""
   else
     text=$shown

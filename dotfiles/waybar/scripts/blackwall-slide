@@ -6,17 +6,17 @@
 
 session=${JACK_STATE_DIR:-/var/run/jack}/session
 if [ ! -e "$session" ]; then
-  notify 'Blackwall' 'Brak sesji Tails; nie ma z czego wyjść.'
+  notify 'Blackwall' 'No Tails session to slide out of.'
   exit 0
 fi
 
 sudo -n /usr/local/bin/jack slide
 rc=$?
 if [ "$rc" -ne 0 ]; then
-  notify 'Blackwall' "jack slide nie powiódł się (kod $rc); ekran i tak zostanie zablokowany."
+  notify 'Blackwall' "jack slide failed (exit $rc); locking the screen anyway."
 fi
 if has swaylock; then
   exec swaylock -f
 fi
-notify 'Blackwall' 'Brak swaylock: ekran NIE jest zablokowany.'
+notify 'Blackwall' 'No swaylock: the screen is NOT locked.'
 exit 1

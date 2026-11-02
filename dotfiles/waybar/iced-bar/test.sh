@@ -67,10 +67,10 @@ NL='
 ice() { # text alt tooltip(JSON-escaped) class-list
   printf '{"text":"%s","alt":"%s","tooltip":"%s","class":[%s]}' "$1" "$2" "$3" "$4"
 }
-OFF_DIR=$(ice off off "ICE: off\\nbrak katalogu $I" '"off"')
-OFF_FILE=$(ice off off 'ICE: off\nbrak pliku level' '"off"')
-OFF_BAD=$(ice off off 'ICE: off\nniepoprawna treść pliku level' '"off"')
-OFF_PERM=$(ice off off 'ICE: off\nbrak dostępu do pliku level' '"off"')
+OFF_DIR=$(ice off off "ICE: off\\nno directory $I" '"off"')
+OFF_FILE=$(ice off off 'ICE: off\nno level file' '"off"')
+OFF_BAD=$(ice off off 'ICE: off\ninvalid level file' '"off"')
+OFF_PERM=$(ice off off 'ICE: off\nlevel file not readable' '"off"')
 put() { printf '%s\n' "$1" > "$I/level"; }
 
 echo "== ICE: $prog"
@@ -134,7 +134,7 @@ echo "== countdown"
 put CZARNY
 now=$(date +%s)
 echo $((now + 120)) > "$I/countdown"
-expect_glob "countdown: seconds, armed, CZARNY" '{"text":"CZARNY 1[01][0-9]s","alt":"armed","tooltip":"ICE: CZARNY\\nWyłączenie za 1[01][0-9] s (*Z)","class":\["czarny","armed"\]}'
+expect_glob "countdown: seconds, armed, CZARNY" '{"text":"CZARNY 1[01][0-9]s","alt":"armed","tooltip":"ICE: CZARNY\\nShutdown in 1[01][0-9] s (*Z)","class":\["czarny","armed"\]}'
 n1=$(lines); sleep 2.5; n2=$(lines)
 [ "$n2" -ge $((n1 + 2)) ] && ok "ticks once a second while armed ($n1 -> $n2 lines)" || no "no ticks while armed ($n1 -> $n2 lines)"
 rm "$I/countdown"
@@ -142,11 +142,11 @@ expect "countdown removed: not armed" "$(ice CZARNY czarny 'ICE: CZARNY' '"czarn
 n1=$(lines); sleep 3; n2=$(lines)
 [ "$n2" -eq "$n1" ] && ok "no ticks without countdown" || no "output while idle ($n1 -> $n2 lines)"
 echo 0000000005 > "$I/countdown"
-expect_glob "deadline in the past: 0s (leading zeros fine)" '{"text":"CZARNY 0s","alt":"armed","tooltip":"ICE: CZARNY\\nWyłączenie za 0 s (1970-01-01T00:00:05Z)","class":\["czarny","armed"\]}'
+expect_glob "deadline in the past: 0s (leading zeros fine)" '{"text":"CZARNY 0s","alt":"armed","tooltip":"ICE: CZARNY\\nShutdown in 0 s (1970-01-01T00:00:05Z)","class":\["czarny","armed"\]}'
 echo -5 > "$I/countdown"
 expect "invalid countdown is ignored" "$(ice CZARNY czarny 'ICE: CZARNY' '"czarny"')"
 rm "$I/level"; echo $(($(date +%s) + 60)) > "$I/countdown"
-expect_glob "countdown without level: ICE Ns, off+armed" '{"text":"ICE [0-9]*s","alt":"armed","tooltip":"ICE: off\\nbrak pliku level\\nWyłączenie za *","class":\["off","armed"\]}'
+expect_glob "countdown without level: ICE Ns, off+armed" '{"text":"ICE [0-9]*s","alt":"armed","tooltip":"ICE: off\\nno level file\\nShutdown in *","class":\["off","armed"\]}'
 rm "$I/countdown"
 
 echo "== directory removed and created again"
@@ -157,22 +157,22 @@ expect "directory created again" "$(ice ZIELONY zielony 'ICE: ZIELONY' '"zielony
 
 echo "== Blackwall: $prog --blackwall"
 start bw blackwall
-BW_OFF='{"text":"BW","alt":"off","tooltip":"Blackwall: brak sesji","class":["off"]}'
+BW_OFF='{"text":"BW","alt":"off","tooltip":"Blackwall: no session","class":["off"]}'
 expect "no directory: discreet" "$BW_OFF"
 mkdir "$J"
 expect "directory, no session: discreet" "$BW_OFF"
 TZ=UTC touch -t 202611021431.00 "$J/session"
-expect "session: ZA MUREM" '{"text":"ZA MUREM","alt":"session","tooltip":"Blackwall: sesja Tails (bhyve, VLAN 40)\nod 2026-11-02T14:31:00Z\nPPM: Slide","class":["czarny"]}'
+expect "session: BEYOND THE WALL" '{"text":"BEYOND THE WALL","alt":"session","tooltip":"Blackwall: Tails session (bhyve, VLAN 40)\nsince 2026-11-02T14:31:00Z\nRight-click: Slide","class":["czarny"]}'
 chmod 000 "$J/session"
 sleep 1
-case $(last) in *'"ZA MUREM"'*) ok "root-only session file still counts" ;; *) no "root-only session file lost" "$(last)" ;; esac
+case $(last) in *'"BEYOND THE WALL"'*) ok "root-only session file still counts" ;; *) no "root-only session file lost" "$(last)" ;; esac
 chmod 644 "$J/session"
 rm "$J/session"
 expect "session over: discreet" "$BW_OFF"
 ln -s /etc/passwd "$J/session"
 expect "symlink is not a session" "$BW_OFF"
 rm "$J/session"; rm -rf "$J"; mkdir "$J"; TZ=UTC touch -t 202611021431.00 "$J/session"
-expect_glob "directory created again with a session" '*"ZA MUREM"*'
+expect_glob "directory created again with a session" '*"BEYOND THE WALL"*'
 
 echo "== output"
 if command -v jq > /dev/null 2>&1; then
