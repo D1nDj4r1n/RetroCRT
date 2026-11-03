@@ -1,0 +1,174 @@
+# retrocrt - Starship prompt (zsh), powerline like tmux power
+# Canonical palette: ../../palette
+# Install to ~/.config/starship.toml (./install.sh does it); zshrc runs
+#   eval "$(starship init zsh)"
+# Same file on Arch Linux and FreeBSD (Starship 1.27, ports and pacman).
+# Glyphs are Nerd Font code points written as TOML escapes, so this file is
+# ASCII; the font is JetBrainsMono Nerd Font from ./install.sh --packages.
+#
+#   [ OS user@host ]> ~/path >  > git >        < langs < 3s < x 1
+#   >                                  (vi mode: INSERT AMBER, NORMAL CYAN)
+#
+# Surfaces, as tmux power: pill CYAN (root RED), directory VISUAL_BG,
+# git and languages BACKGROUND_ALT, duration VISUAL_BG (AMBER text),
+# exit code RED. A block that has nothing to show is left out together
+# with its arrows (conditional groups).
+
+"$schema" = "https://starship.rs/config-schema.json"
+palette = "retrocrt"
+add_newline = true
+continuation_prompt = "[\u2219](fg:dim) "
+
+format = """\
+[ ](bg:cyan)$os$username$hostname[ ](bg:cyan)\
+[\ue0b0](fg:cyan bg:visual_bg)$directory[\ue0b0](fg:visual_bg)\
+([\ue0b0](fg:background bg:background_alt)$git_branch$git_state$git_status[\ue0b0](fg:background_alt))\
+$fill\
+([\ue0b2](fg:background_alt)$c$cpp$python$nodejs$rust$golang$lua)\
+([\ue0b2](fg:visual_bg)$cmd_duration)\
+([\ue0b2](fg:red)$status)
+$character"""
+
+[palettes.retrocrt]
+background = "#0a0e14"
+background_alt = "#121820"
+foreground = "#c8d0d8"
+dim = "#5a6570"
+cyan = "#00d4c8"
+amber = "#ffb020"
+magenta = "#e040a0"
+green = "#40c070"
+red = "#e05050"
+blue = "#4080c0"
+visual_bg = "#1e3a4c"
+
+# ---- pill: system, and user@host only over SSH or as root ----------------
+[os]
+disabled = false
+format = "[$symbol]($style)"
+style = "bg:cyan fg:background"
+
+[os.symbols]
+FreeBSD = "\uf30c"
+Arch = "\uf303"
+Linux = "\uf31a"
+
+[username]
+show_always = false
+format = "[ $user]($style)"
+style_user = "bg:cyan fg:background bold"
+style_root = "bg:red fg:background bold"
+
+[hostname]
+ssh_only = true
+ssh_symbol = ""
+format = "[@$hostname]($style)"
+style = "bg:cyan fg:background bold"
+
+# ---- directory: FOREGROUND on VISUAL_BG ------------------------------------
+[directory]
+format = "[ $path ]($style)[$read_only]($read_only_style)"
+style = "bg:visual_bg fg:foreground bold"
+read_only = "\U000f033e "
+read_only_style = "bg:visual_bg fg:amber"
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "\u2026/"
+
+# ---- git: branch CYAN, changes AMBER, conflicts RED, state AMBER -----------
+[git_branch]
+symbol = "\ue725 "
+format = "[ $symbol$branch(:$remote_branch) ]($style)"
+style = "bg:background_alt fg:cyan"
+
+[git_state]
+format = "[$state( $progress_current/$progress_total) ]($style)"
+style = "bg:background_alt fg:amber bold"
+
+[git_status]
+format = "([$all_status$ahead_behind ]($style))"
+style = "bg:background_alt fg:amber"
+conflicted = "[=$count ](bg:background_alt fg:red bold)"
+ahead = "\u21e1$count "
+behind = "\u21e3$count "
+diverged = "\u21e1$ahead_count\u21e3$behind_count "
+untracked = "?$count "
+stashed = "\u2261$count "
+modified = "!$count "
+staged = "[+$count ](bg:background_alt fg:green)"
+renamed = "\u00bb$count "
+deleted = "[\u2718$count ](bg:background_alt fg:red)"
+
+# ---- right: languages BLUE on BACKGROUND_ALT (versions are information) -----
+[c]
+format = "[ $symbol($version) ]($style)"
+symbol = "\ue61e "
+style = "bg:background_alt fg:blue"
+version_format = "${raw}"
+
+[cpp]
+disabled = false
+format = "[ $symbol($version) ]($style)"
+symbol = "\ue61d "
+style = "bg:background_alt fg:blue"
+version_format = "${raw}"
+
+[python]
+format = "[ $symbol($version)( $virtualenv) ]($style)"
+symbol = "\ue73c "
+style = "bg:background_alt fg:blue"
+version_format = "${raw}"
+
+[nodejs]
+format = "[ $symbol($version) ]($style)"
+symbol = "\ue718 "
+style = "bg:background_alt fg:blue"
+version_format = "${raw}"
+
+[rust]
+format = "[ $symbol($version) ]($style)"
+symbol = "\ue7a8 "
+style = "bg:background_alt fg:blue"
+version_format = "${raw}"
+
+[golang]
+format = "[ $symbol($version) ]($style)"
+symbol = "\ue627 "
+style = "bg:background_alt fg:blue"
+version_format = "${raw}"
+
+[lua]
+format = "[ $symbol($version) ]($style)"
+symbol = "\ue620 "
+style = "bg:background_alt fg:blue"
+version_format = "${raw}"
+
+# ---- right: duration over 2 s (attention, AMBER) and exit code (RED) -------
+[cmd_duration]
+min_time = 2000
+format = "[ \U000f051b $duration ]($style)"
+style = "bg:visual_bg fg:amber"
+
+[status]
+disabled = false
+format = "[ $symbol$status( $signal_name) ]($style)"
+symbol = "\uf00d "
+style = "bg:red fg:background bold"
+recognize_signal_code = true
+map_symbol = false
+pipestatus = false
+
+[fill]
+symbol = " "
+style = "fg:background"
+
+# ---- prompt character: the CRT status language -----------------------------
+# INSERT = AMBER, NORMAL = CYAN, VISUAL = MAGENTA, REPLACE = RED, error = RED.
+# zsh reports only insert and command (normal) mode to Starship.
+[character]
+success_symbol = "[\u276f](bold fg:amber)"
+error_symbol = "[\u276f](bold fg:red)"
+vimcmd_symbol = "[\u276e](bold fg:cyan)"
+vimcmd_visual_symbol = "[\u276e](bold fg:magenta)"
+vimcmd_replace_symbol = "[\u276e](bold fg:red)"
+vimcmd_replace_one_symbol = "[\u276e](bold fg:red)"

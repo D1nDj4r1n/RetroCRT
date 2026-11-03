@@ -234,6 +234,83 @@ fi
 grep -q 'syntax-highlighting' adapters/zsh/retrocrt.zsh && ok "zsh adapter documents plugin order"
 
 echo
+echo "=== starship (zsh prompt) ==="
+ST=adapters/starship/retrocrt.toml
+if need_hex "$ST" $CANON $VISUAL_BG; then
+  ok "$ST canonical colors"
+fi
+st_hex_ok=1
+for h in $(grep -Eio '#[0-9a-f]{6}' "$ST" | tr 'A-F' 'a-f' | sort -u); do
+  if ! grep -Eiq "^[A-Z_]+=${h}\$" palette; then
+    bad "$ST uses $h which is not in palette"
+    st_hex_ok=0
+  fi
+done
+[ "$st_hex_ok" -eq 1 ] && ok "$ST hex values are in palette"
+if LC_ALL=C grep -q '[^ -~]' "$ST"; then
+  bad "$ST is not ASCII (write glyphs as \\u escapes)"
+else
+  ok "$ST is ASCII (\\u escapes)"
+fi
+if command -v python3 > /dev/null 2>&1; then
+  if stout=$(python3 -I - "$ST" 2>&1 <<'EOF'
+import re, sys, tomllib
+d = tomllib.load(open(sys.argv[1], "rb"))
+assert d["palette"] == "retrocrt", "palette is not retrocrt"
+pal = d["palettes"]["retrocrt"]
+attrs = {"bold", "italic", "underline", "dimmed", "inverted", "blink", "hidden", "strikethrough", "none"}
+bad = []
+def styles(node, path=""):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            styles(v, f"{path}.{k}" if path else k)
+    elif isinstance(node, str):
+        key = path.rsplit(".", 1)[-1]
+        if key.startswith("style") or key.endswith("_style"):
+            yield_style(path, node)
+        for m in re.finditer(r"\]\(([^)]*)\)", node):
+            yield_style(path, m.group(1))
+def yield_style(path, st):
+    if st.startswith("$"):
+        return
+    for tok in st.split():
+        name = tok.split(":", 1)[1] if ":" in tok else tok
+        if name not in pal and name not in attrs:
+            bad.append(f"{path}: {tok}")
+styles({k: v for k, v in d.items() if k != "palettes"})
+assert not bad, "styles outside the palette: " + ", ".join(sorted(set(bad)))
+c = d["character"]
+assert "amber" in c["success_symbol"] and "red" in c["error_symbol"] and "cyan" in c["vimcmd_symbol"], "vi-mode colors"
+f = d["format"]
+for group in ("$git_branch", "$cmd_duration", "$status"):
+    # "([arrow](style)$module" opens a conditional group with its own arrow
+    assert re.search(r"\(\[[^\]]*\]\([^)]*\)" + re.escape(group), f), group + " is not in a conditional group"
+assert d["status"]["disabled"] is False and d["os"]["disabled"] is False
+print("ok")
+EOF
+); then
+    ok "starship: TOML, palette-only styles, vi-mode colors, conditional groups"
+  else
+    bad "starship theme: $stout"
+  fi
+else
+  printf 'SKIP  python3 not installed (starship TOML not parsed)\n'
+fi
+if command -v starship > /dev/null 2>&1; then
+  if STARSHIP_CONFIG="$ROOT/$ST" starship print-config > /dev/null 2>&1; then
+    ok "starship loads the theme"
+  else
+    bad "starship rejects the theme"
+  fi
+  case $(cd "$ROOT" && STARSHIP_CONFIG="$ROOT/$ST" starship prompt --status=1 --terminal-width=100 2> /dev/null) in
+    *'224;80;80'*) ok "starship renders the error pill in RED" ;;
+    *) bad "starship render has no RED error pill" ;;
+  esac
+else
+  printf 'SKIP  starship not installed (theme checked statically)\n'
+fi
+
+echo
 echo "=== tmux adapter ==="
 if grep -q 'bind-key\|bind -' adapters/tmux/retrocrt.conf; then
   bad "tmux adapter contains keybinds"
@@ -794,11 +871,31 @@ if command -v zsh >/dev/null 2>&1; then
   else
     bad "zshrc has a syntax error"
   fi
-  # Without Oh My Zsh / p10k (fresh system): zshrc still defines the battery.
-  zout=$(HOME="$dothome" ZDOTDIR="$dothome" zsh -i -c 'whence -w battery_info prompt_battery_info' 2>/dev/null || true)
+  if grep -Eiq 'p10k|powerlevel' "$ROOT/dotfiles/zsh/zshrc"; then
+    bad "zshrc still loads Powerlevel10k"
+  else
+    ok "zshrc has no Powerlevel10k"
+  fi
+  # The prompt comes from `starship init zsh`, last; a fake starship shows it is called.
+  mkdir -p "$dothome/fakebin"
+  printf '#!/bin/sh\n[ "$1 $2" = "init zsh" ] && echo "PROMPT=starship-init-ran"\n' > "$dothome/fakebin/starship"
+  chmod +x "$dothome/fakebin/starship"
+  zout=$(HOME="$dothome" ZDOTDIR="$dothome" PATH="$dothome/fakebin:$PATH" zsh -i -c 'print -r -- "$PROMPT"' 2>/dev/null || true)
   case $zout in
-    *'battery_info: function'*'prompt_battery_info: function'*) ok "zshrc defines battery_info and the p10k segment" ;;
-    *) bad "zshrc battery functions missing: ${zout}" ;;
+    *starship-init-ran*) ok "zshrc runs starship init zsh" ;;
+    *) bad "zshrc did not run starship init: ${zout}" ;;
+  esac
+  # Starship init must come after the vi-mode widget so it wraps it.
+  if awk '/zle -N zle-keymap-select/ { w = NR } /starship init zsh/ { s = NR } END { exit !(w && s && s > w) }' "$ROOT/dotfiles/zsh/zshrc"; then
+    ok "zshrc: starship init after the zle-keymap-select widget"
+  else
+    bad "zshrc: starship init must follow the zle-keymap-select widget"
+  fi
+  rm -f "$dothome/fakebin/starship"
+  zout=$(HOME="$dothome" ZDOTDIR="$dothome" PATH="/usr/bin:/bin" zsh -i -c 'print -r -- "$PROMPT"' 2>&1 || true)
+  case $zout in
+    *'brak starship'*'❯'*) ok "zshrc without starship: message and a plain prompt" ;;
+    *) bad "zshrc without starship: ${zout}" ;;
   esac
 else
   printf 'SKIP  zsh not installed\n'
