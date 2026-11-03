@@ -1,10 +1,3 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
@@ -15,7 +8,8 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="powerlevel10k/powerlevel10k"
+# Prompt rysuje Starship (motyw retrocrt, ~/.config/starship.toml), nie Oh My Zsh.
+ZSH_THEME=""
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -123,59 +117,8 @@ fi
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# Bateria. Arch: sysfs (BAT* to symlinki, więc glob, a nie find -type d).
-# FreeBSD: sysctl hw.acpi.battery.*, acpi_battery(4); state: 2 = ładuje, 7 = brak.
-# Ustawia reply=(kolor ikona procent); bez baterii zwraca 1.
-battery_info() {
-    local cap bat_status bat
-
-    if [[ $OSTYPE == freebsd* ]]; then
-        cap=$(sysctl -n hw.acpi.battery.life 2>/dev/null)
-        local -i state=$(sysctl -n hw.acpi.battery.state 2>/dev/null)
-        (( state == 7 )) && return 1
-        (( state & 2 )) && bat_status=Charging
-    else
-        for bat in /sys/class/power_supply/BAT*(N); do
-            [[ -r $bat/capacity ]] || continue
-            cap=$(<$bat/capacity)
-            [[ -r $bat/status ]] && bat_status=$(<$bat/status)
-            break
-        done
-    fi
-    [[ $cap == <0-100> ]] || return 1
-
-    local icon="󰁹"
-
-    [[ "$bat_status" == "Charging" ]] && icon="󰂄"
-
-    if (( cap < 20 )); then
-        reply=(red $icon $cap)
-    elif (( cap < 50 )); then
-        reply=(yellow $icon $cap)
-    else
-        reply=(green $icon $cap)
-    fi
-}
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-# p10k składa RPROMPT od nowa przy każdym prompcie, więc RPROMPT='$(battery_info)'
-# nigdy się nie pokazywał. Z p10k bateria jest segmentem dopisanym tutaj
-# (~/.p10k.zsh zostaje bez zmian), bez p10k zostaje RPROMPT.
-function prompt_battery_info() {
-    battery_info && p10k segment -f $reply[1] -t "$reply[2] $reply[3]%%"
-}
-if (( $+functions[p10k] && $+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS )); then
-    (( $POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS[(Ie)battery_info] )) ||
-        POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS+=(battery_info)
-    p10k reload
-elif (( ! $+functions[p10k] )); then
-    setopt prompt_subst
-    RPROMPT='$(battery_info && print -rn -- "%F{$reply[1]}$reply[2] $reply[3]%%%f")'
-fi
 bindkey -v
-# === retrocrt (dopiski — nie ruszać p10k) ===
+# === retrocrt (dopiski) ===
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#5a6570'
 
 typeset -A ZSH_HIGHLIGHT_STYLES
@@ -206,3 +149,14 @@ zle -N zle-line-init retrocrt-zle-line-init
 
 # Created by `pipx` on 2026-09-01 23:01:47
 export PATH="$PATH:$HOME/.local/bin"
+
+# Prompt: Starship z motywem retrocrt (~/.config/starship.toml; ./install.sh).
+# Na samym końcu, za widżetem trybu vi powyżej: Starship go opakowuje
+# (kształt kursora zostaje) i przerysowuje znak promptu przy zmianie trybu
+# (❯ INSERT AMBER, ❮ NORMAL CYAN, błąd RED).
+if (( $+commands[starship] )); then
+    eval "$(starship init zsh)"
+else
+    print -u2 "zshrc: brak starship (Arch: pacman -S starship, FreeBSD: pkg install starship)"
+    PROMPT='%F{#00d4c8}%~%f %F{#ffb020}❯%f '
+fi

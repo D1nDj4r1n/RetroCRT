@@ -23,7 +23,7 @@ Default systems: **Arch Linux** and **FreeBSD**. Main WM: **Sway**. Main termina
                        │
                       zsh
                        │
-                  Powerlevel10k
+                  Starship           (prompt; replaces Powerlevel10k)
                        │
                      Sway               (HikaruWM: optional)
                        │
@@ -43,7 +43,7 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 | GPU | kernel driver | `drm-kmod` + `kld_list` (`i915kms`, `amdgpu`, `radeonkms`) |
 | Kitty (main terminal) | `kitty` | `kitty` (port built with Wayland, runs natively under Sway) |
 | bar | swaybar (`adapters/sway/bar`) | Waybar, Projekt Blackwall (`dotfiles/waybar`; see WAYBAR) |
-| battery (tmux, zsh prompt) | `/sys/class/power_supply/`: tmux takes a type Battery that is not scope Device (mouse, gamepad); zsh `BAT*` | `sysctl hw.acpi.battery.*`; a PC without an ACPI battery has no such node |
+| battery (tmux) | `/sys/class/power_supply/`: a type Battery that is not scope Device (mouse, gamepad) | `sysctl hw.acpi.battery.*`; a PC without an ACPI battery has no such node |
 | tmux | 3.4 or newer; since 3.7 the prompt needs `fill`, which `retrocrt.conf` sets | same (ports: 3.8) |
 | Vim system clipboard | `+clipboard` in `vim --version` (`gvim` has it): native; otherwise the `wl-copy` fallback | console `vim` has no `+clipboard`: `wl-copy` fallback; `vim-gtk3` has it |
 
@@ -51,7 +51,7 @@ Both default systems run the same adapters and dotfiles. Only these differ:
 ./install.sh --packages      # prints pacman or pkg + git clone lines for this system
 ```
 
-It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, kitty, foot, wl-clipboard, tmux, zsh, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, waybar, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems (FreeBSD has no Powerlevel10k port).
+It prints, it does not run. Packages: sway, swaylock, swayidle, swaybg, mako, kitty, foot, wl-clipboard, tmux, zsh, starship, git, fzf, vim, neovim, yazi, a JetBrainsMono Nerd Font; on FreeBSD also seatd, drm-kmod, waybar, and sudo (Oh My Zsh's `sudo` plugin). Oh My Zsh, zsh-autosuggestions, zsh-syntax-highlighting, and oil.nvim come from `git clone` on both systems; Starship is a package on both (`starship`, 1.27 in FreeBSD ports).
 
 FreeBSD steps, from the Handbook's Wayland chapter: `sysrc seatd_enable=YES`, `service seatd start`, `pw groupmod video -m <user>`. For the Waybar temperature: `sysrc kld_list+=coretemp` (Intel) or `amdtemp` (AMD).
 
@@ -70,7 +70,7 @@ set -g @retrocrt_battery on    # laptop
 set -g @retrocrt_battery off   # PC
 ```
 
-`auto` already does the right thing on both; `on` / `off` pin it. `./install.sh` says which one this machine looks like. The zsh prompt needs no option: `battery_info` shows nothing when there is no battery.
+`auto` already does the right thing on both; `on` / `off` pin it. `./install.sh` says which one this machine looks like. The zsh prompt (Starship) shows no battery.
 
 Sway: copy the default config, change its terminal line to `set $term kitty` (the default is `foot`), then `include` the retrocrt colors (see INSTALL).
 
@@ -151,7 +151,7 @@ Bright ANSI (same hues, mixed ~20% toward white):
 | VISUAL | MAGENTA |
 | REPLACE | RED (destructive edit) |
 
-Applied where a mode indicator exists (Vim/Neovim statusline, Yazi mode, p10k vi prompt character, tmux). Not forced onto applications without that concept.
+Applied where a mode indicator exists (Vim/Neovim statusline, Yazi mode, Starship prompt character, tmux). Not forced onto applications without that concept.
 
 tmux mapping:
 
@@ -244,7 +244,8 @@ HikaruWM mapping:
 | foot | `adapters/foot/retrocrt` | fallback terminal (sway's default `$term`; `include=` file) |
 | tmux | `adapters/tmux/retrocrt.conf` | status, panes, copy-mode, battery left, date right |
 | tmux power | `adapters/tmux/power.conf` | powerline status line (default look): mode pill, sections, battery left, date right |
-| zsh | `adapters/zsh/retrocrt.zsh` | syntax, suggestions, p10k colors only |
+| zsh | `adapters/zsh/retrocrt.zsh` | syntax and suggestion colors (+ an optional p10k overlay) |
+| Starship | `adapters/starship/retrocrt.toml` | zsh prompt: powerline like tmux power, vi-mode character (see STARSHIP) |
 | Sway | `adapters/sway/colors` | focused/unfocused/urgent window chrome |
 | swaybar | `adapters/sway/bar-colors` | workspaces + binding mode (Arch) |
 | mako | `adapters/mako/config` | notifications |
@@ -272,7 +273,7 @@ Portable on both systems:
 
 - vimrc creates `~/.vim/undo` (Vim does not). Without `+clipboard`, unnamed yanks go to `wl-copy` under Sway; paste with Ctrl+Shift+V in Kitty.
 - Neovim `clipboard=unnamedplus` uses `wl-copy`/`wl-paste` (`wl-clipboard`).
-- zshrc battery reads sysfs on Arch and `sysctl` on FreeBSD. Powerlevel10k rebuilds `RPROMPT` on every prompt, so with p10k the battery is a p10k segment (`battery_info`) appended to the right prompt from zshrc; `~/.p10k.zsh` is not edited. p10k's own `battery` segment covers Linux and macOS only.
+- zshrc draws the prompt with Starship (`eval "$(starship init zsh)"`, last, after the vi-mode cursor widget so Starship wraps it). Without `starship` it prints what to install and falls back to a plain `~/path ❯` prompt. The battery is in the tmux bar, not in the prompt.
 - zshrc says what to clone when Oh My Zsh is missing; `PATH` uses `$HOME/.local/bin`.
 
 ## TMUX POWER
@@ -372,6 +373,28 @@ FreeBSD only (Forteca, FreeBSD 15, sway); Arch keeps swaybar. The bar is the eve
 
 Sway starts it with `bar { swaybar_command waybar }`; `pkill -USR2 -x waybar` reloads config and style without logging out.
 
+## STARSHIP
+
+`adapters/starship/retrocrt.toml` is the zsh prompt on both systems, installed as `~/.config/starship.toml`. It replaces Powerlevel10k; Oh My Zsh stays for its plugins with `ZSH_THEME=""`. The layout follows tmux power: blocks with arrows on the first line, the command on the second.
+
+```text
+[ OS user@host ]> ~/path >  > git main !1 +1 >          < py 3.13 < 4s < x 127
+>
+```
+
+| Block | Role | Shown |
+| --- | --- | --- |
+| pill: OS icon (FreeBSD, Arch) | BACKGROUND on CYAN | always |
+| `user@host` in the pill | BACKGROUND on CYAN; root on RED | over SSH, or as root |
+| directory | FOREGROUND on VISUAL_BG (read-only lock AMBER) | always; 3 levels, cut at the repo root |
+| git | branch CYAN, changes AMBER, staged GREEN, deleted and conflicts RED, rebase/merge state AMBER, on BACKGROUND_ALT | in a repository |
+| languages | BLUE on BACKGROUND_ALT (C, C++, Python, Node, Rust, Go, Lua) | when the directory is a project |
+| duration | AMBER on VISUAL_BG | after a command longer than 2 s |
+| exit code | BACKGROUND on RED, with the signal name (`130 INT`) | after a failed command |
+| character `❯` / `❮` | INSERT AMBER, NORMAL CYAN, error RED | always |
+
+A block with nothing to show disappears with its arrows (Starship conditional groups). zsh reports only insert and command mode to Starship, so VISUAL and REPLACE colors apply in fish only. Glyphs are written as TOML `\u` escapes; the file is ASCII. The OS icon is set for FreeBSD and Arch; another OS shows Starship's default symbol.
+
 ## RULES
 
 How a new application should consume retrocrt:
@@ -405,7 +428,7 @@ Known deviation: the FreeBSD Waybar is part of Projekt Blackwall and uses that p
 - Do not introduce synthwave / vaporwave / RGB gaming palettes.
 - Do not recolor every file type just because a UI allows it.
 - Do not replace `pack/retro` or any hand-managed Neovim packs with Lazy/Packer/vim-plug.
-- Do not put fonts, padding, opacity, p10k layout, tmux keybinds, or Sway keybinds into adapters.
+- Do not put fonts, padding, opacity, tmux keybinds, or Sway keybinds into adapters. (The Starship theme and tmux power are layouts by nature; they stay in their own files.)
 
 ## INSTALL
 
@@ -460,11 +483,12 @@ vim.cmd.colorscheme("retrocrt")
 ```
 
 ```zsh
-# ~/.zshrc — after Oh My Zsh, p10k, and zsh-syntax-highlighting (last plugin)
+# ~/.zshrc — after Oh My Zsh and zsh-syntax-highlighting (last plugin)
 source ~/.config/retrocrt/adapters/zsh/retrocrt.zsh
+eval "$(starship init zsh)"   # last line; theme: ~/.config/starship.toml
 ```
 
-`dotfiles/zsh/zshrc` keeps its own retrocrt token colors and does not source this adapter, so p10k colors stay as `~/.p10k.zsh` sets them.
+`dotfiles/zsh/zshrc` keeps its own retrocrt token colors and does not source this adapter; its prompt is Starship.
 
 mako, swaylock, and swaynag load `~/.config/<app>/config` after `./install.sh`.
 
@@ -473,16 +497,18 @@ Required zsh order:
 ```text
 plugins (including autosuggestions, vi-mode)
     ↓
-source Oh My Zsh
-    ↓
-Powerlevel10k
+source Oh My Zsh             ZSH_THEME="" (no theme)
     ↓
 zsh-syntax-highlighting     LAST among plugins
     ↓
 source retrocrt.zsh         color overlay
+    ↓
+zle-keymap-select widget    vi-mode cursor shape
+    ↓
+starship init zsh           LAST; wraps the widget, redraws the vi-mode character
 ```
 
-`install.sh` does not rewrite `~/.p10k.zsh`, `kitty.conf` (font/padding/opacity), editor keymaps, tmux keybinds, or Sway keybinds/outputs.
+`install.sh` does not rewrite `kitty.conf` (font/padding/opacity), editor keymaps, tmux keybinds, or Sway keybinds/outputs.
 
 ## VALIDATE
 

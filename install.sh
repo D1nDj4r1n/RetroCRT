@@ -41,9 +41,10 @@ Installs visual adapters:
 Existing files are moved to <name>.bak.<timestamp> before they are replaced.
 
 Adapters do not change: fonts, Kitty padding/opacity, bindkey,
-Oh My Zsh plugin lists, the body of ~/.p10k.zsh, tmux keybinds,
+Oh My Zsh plugin lists, tmux keybinds,
 or Sway keybinds/outputs. --dotfiles installs your own vimrc, zshrc,
-and Neovim config from this repository; it never touches ~/.p10k.zsh.
+and Neovim config from this repository. The prompt is Starship
+(~/.config/starship.toml, linked from adapters/starship/retrocrt.toml).
 EOF
 }
 
@@ -82,7 +83,7 @@ print_packages() {
     cat <<'EOF'
 # Arch Linux (as root)
 pacman -S --needed sway swaylock swayidle swaybg mako kitty foot wl-clipboard \
-    tmux zsh git fzf vim neovim yazi ttf-jetbrains-mono-nerd
+    tmux zsh starship git fzf vim neovim yazi ttf-jetbrains-mono-nerd
 
 EOF
   fi
@@ -91,7 +92,7 @@ EOF
 # FreeBSD (as root). Sway needs seatd and the video group (FreeBSD Handbook,
 # Wayland chapter). XDG_RUNTIME_DIR is set automatically since FreeBSD 14.1.
 pkg install sway swaylock swayidle swaybg mako kitty foot wl-clipboard seatd drm-kmod \\
-    waybar libnotify tmux zsh git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
+    waybar libnotify tmux zsh starship git fzf vim neovim yazi nerd-fonts-jetbrainsmono sudo
 sysrc seatd_enable=YES
 service seatd start
 pw groupmod video -m $user
@@ -103,7 +104,6 @@ EOF
   cat <<'EOF'
 # Both systems (as yourself): what dotfiles/zsh/zshrc and dotfiles/nvim load
 git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh ~/.oh-my-zsh
-git clone --depth 1 https://github.com/romkatv/powerlevel10k ~/.oh-my-zsh/custom/themes/powerlevel10k
 git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 git clone --depth 1 https://github.com/stevearc/oil.nvim ~/.local/share/nvim/site/pack/retro/start/oil.nvim
@@ -267,6 +267,9 @@ link_or_copy "$DEST/adapters/mako/config" "$HOME/.config/mako/config"
 link_or_copy "$DEST/adapters/swaylock/config" "$HOME/.config/swaylock/config"
 link_or_copy "$DEST/adapters/swaynag/config" "$HOME/.config/swaynag/config"
 
+# Starship prompt theme (zsh; replaces Powerlevel10k)
+link_or_copy "$DEST/adapters/starship/retrocrt.toml" "$HOME/.config/starship.toml"
+
 # HikaruWM: mako above is the file hikaru-autostart reads (~/.config/mako/config).
 # hikaru.conf is a personal file, so it is only touched with --hikaru-conf.
 # hikaru-lock is installed by Hikaru; its waylock flags are printed below.
@@ -361,8 +364,9 @@ if [ "$DOTFILES" -eq 0 ]; then
   echo "  nvim (~/.config/nvim/init.lua):"
   echo "    vim.cmd.colorscheme('retrocrt')"
   echo
-  echo "  zsh (~/.zshrc) AFTER oh-my-zsh, p10k, and syntax-highlighting:"
+  echo "  zsh (~/.zshrc) AFTER oh-my-zsh and syntax-highlighting:"
   echo "    source ${DEST}/adapters/zsh/retrocrt.zsh"
+  echo "    eval \"\$(starship init zsh)\"   # last line; theme: ~/.config/starship.toml"
   echo
 fi
 echo "  foot, fallback terminal (~/.config/foot/foot.ini, top of file):"

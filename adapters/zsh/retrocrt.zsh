@@ -2,10 +2,13 @@
 # Canonical palette: ../../palette (or ~/.config/retrocrt/palette)
 #
 # Source this AFTER:
-#   plugins -> Oh My Zsh -> Powerlevel10k -> zsh-syntax-highlighting (LAST plugin)
+#   plugins -> Oh My Zsh -> zsh-syntax-highlighting (LAST plugin)
+# and before `eval "$(starship init zsh)"`. The prompt colours come from
+# adapters/starship/retrocrt.toml; the p10k overlay below is only for setups
+# that still run Powerlevel10k.
 # This file is not a plugin. It only sets colors.
 #
-# It does not rewrite ~/.p10k.zsh. It only overrides color tokens after p10k loads.
+# It does not rewrite ~/.p10k.zsh; with p10k it only overrides its colour tokens.
 # It does not change bindkey, fonts, or plugin order.
 
 # Load canonical palette if present.
